@@ -4,7 +4,7 @@ from io import BytesIO
 import sys
 
 
-def make_get_request(url, access_token):
+def make_get_request(url, access_token="", headers=[], data=""):
 
     bytes_obj = BytesIO()
     curl_obj = pycurl.Curl()
@@ -12,13 +12,20 @@ def make_get_request(url, access_token):
     curl_obj.setopt(curl_obj.URL, url)
     curl_obj.setopt(curl_obj.HEADERFUNCTION, display_header)
     curl_obj.setopt(curl_obj.WRITEDATA, bytes_obj)
-    curl_obj.setopt(curl_obj.HTTPHEADER, ['Authorization: Token {:s}'.format(access_token)])
+
+    if len(data) > 1:
+        curl_obj.setopt(curl_obj.READDATA, data.encode('utf8'))
+
+    if len(access_token) > 1:
+        # Authenticate:
+        headers.append('Authorization: Token {:s}'.format(access_token))
+    
+    curl_obj.setopt(curl_obj.HTTPHEADER, headers)
 
     curl_obj.perform()
     curl_obj.close()
 
-    get_body = bytes_obj.getvalue()
-    print('GET-Output: \n%s' % get_body.decode('utf8'))
+    return bytes_obj.getvalue().decode('utf8')  # Body of the reply
 
 
 def make_put_request(url, data, header):
@@ -76,7 +83,7 @@ def read_secrets():
     if len(secrets) == 2:
         target_URL = secrets[0]
         access_token = secrets[1]
-        print("fetch_data.py: API URL and access key succesfully read from secrets!")
+        print("fetch_data.py: API URL and access key succesfully read from secrets!\n")
     else:
         print("fetch_data.py: Error: could not read API url and access key from secrets!")
     
@@ -108,13 +115,20 @@ def write_to_elasticsearch(data):
     header = ['Content-Type: application/json']
     
     index = 'testindex'
-    document = '_doc'
+    data_type = '_doc'
     document_id = get_id()
 
-    url = 'http://localhost:9200/{:s}/{:s}/{:s}'.format(index, document, document_id)
+    url = 'http://localhost:9200/{:s}/{:s}/{:s}'.format(index, data_type, document_id)
 
     # curl -XPUT 'http://localhost:9200/testindex/_doc/1' -H 'Content-Type: application/json' -d '{"name":"John Doe"}'
     make_put_request(url, data, header)
+
+
+def search_elasticsearch(query, index=''):
+    header = ['Content-Type: application/json']
+    data_type = '_search'
+    url = 'http://localhost:9200/{:s}/{:s}?pretty'.format(index, data_type)
+    make_get_request(url, headers=header)
 
 
 def main():
@@ -125,9 +139,11 @@ def main():
         target_URL, access_token = read_secrets()
 
     if target_URL != False:
-        #make_get_request(target_URL, access_token)
+        reply = make_get_request(target_URL, access_token)
+        print("Reply request body:")
+        print(reply)
         #write_to_elasticsearch('{"name":"John Doe"}')
-        print(get_id())
+        #search_elasticsearch('{"query": {"match": {"message": "login successful"}}}')
 
 
 main()
