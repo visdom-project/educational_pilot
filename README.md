@@ -6,6 +6,19 @@
 ```docker run -d -p 9200:9200 -p 9300:9300 -h elasticsearch --name elasticsearch -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.7.1```
 TODO: muokkaa elasticsearch clusteria niin, että data tallennetaan persistent memoryyn (volume)
 
+   Edit ElasticSearch configuration file in the container to enable cors and allow access for front service running in localhost:3000 (TODO: move these inside the image to avoid manual set-up):
+```docker exec -it <CONTAINER_ID> bash```
+```cd config```
+```vi elasticsearch.yml```
+
+   Insert the following 2 rows:
+```http.cors.enabled: true```
+```http.cors.allow-origin: http://localhost:3000```
+
+   And exit the container. Rerun the container for the configuration to take effect:
+```docker stop <CONTAINER_ID>```
+```docker start  <CONTAINER_ID>```
+
 2. Write secrets to a configuration file called 'secrets':
 ```touch secrets```
 Write the following lines in the file and get tokens from services:
