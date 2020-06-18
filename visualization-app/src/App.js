@@ -1,65 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './App.css';
 
-import { LineChart, Line, XAxis, YAxis, CartesianGrid } from 'recharts';
-
-
-const SubHeader = ({title}) => 
-  <header className="App-subheader">{title}</header>
-
-
-const LineChartVisu = ({data, title}) => {
-  return (
-    <>
-      <SubHeader title={title} />
-      <div className="intended">
-        <LineChart width={400} height={400} data={data}>
-          <Line class="basic-line" type="monotone" dataKey="uv" />
-          <CartesianGrid class="basic-grid" />
-          <XAxis dataKey="name" />
-          <YAxis />
-        </LineChart>
-      </div>
-    </>
-  )
-}
-
-
-const CourseList = ({courselist, setCourselist}) => {
-
-    useEffect(() => {
-
-      const parseResponseData = (responseData) => {
-        const array = responseData['hits'][0]['_source']['results']
-        // Contains fields: id, url, html_url, code, name, instance_name
-        const courses = array.map((item) => (
-          <li key={item.id}>{item.name}, {item.instance_name}</li>
-        ))
-
-        setCourselist(courses)
-      }
-
-      fetch('http://localhost:9200/plussa-course-list/_search',
-            { method: 'GET',
-              headers:
-              { Accept: 'application/json',
-                'Content-Type': 'application/json'
-            }})
-          .then(response => response.json())
-          .then(data => parseResponseData(data.hits));
-
-    }, [setCourselist]);
-
-    return (
-        <>
-          <SubHeader title={'List of courses'}/>
-          <div className="intended">
-            <ul>{courselist}</ul>
-          </div>
-        </>
-    );
-}
-
+import CourseList from './components/CourseList'
+import LineChartVisu from './components/LineChartVisu'
 
 function App() {
 
@@ -72,9 +15,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">
-        Visu-App
-      </header>
+      <header className="App-header">Visu-App</header>
       <LineChartVisu data={defaultdata} title={'Test figure'}/>
       <CourseList courselist={courselist} setCourselist={setCourselist}></CourseList>
     </div>
