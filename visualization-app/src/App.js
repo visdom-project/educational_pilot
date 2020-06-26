@@ -1,32 +1,46 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import './App.css';
 
-import CourseList from './components/CourseList'
-import LineChartVisu from './components/LineChartVisu'
 import Header from './components/Header'
+import StatusTab from './components/StatusTab'
+import StudentTab from './components/StudentTab'
+import ProgressTab from './components/ProgressTab'
+import ResultTab from './components/ResultTab'
+import CoursesTab from './components/CoursesTab'
+
+const VisuTab = ({tabs, visuIndex}) =>
+  <>{tabs[visuIndex].visu}</>
 
 function App() {
 
+  const [currentTab, setCurrentTab] = useState(0)
+
   const tabs = [
-    { name: 'Status view' },
-    { name: 'Student view' },
-    { name: 'Progress view' },
-    { name: 'Result view' },
-    { name: 'Course view' }
+    { name: 'Status view', 
+      visu: <StatusTab />
+    },
+    { name: 'Student view',
+      visu: <StudentTab />
+    },
+    { name: 'Progress view',
+      visu: <ProgressTab />
+    },
+    { name: 'Result view',
+      visu: <ResultTab />
+    },
+    { name: 'Course view',
+      visu: <CoursesTab />
+    }
   ]
 
-  const [courselist, setCourselist] = useState([])
-
-  const defaultdata = [{name: '1', uv: 0, pv: 0, amt: 0},
-                {name: '2', uv: 200, pv: 0, amt: 0},
-                {name: '3', uv: 300, pv: 0, amt: 0},
-                {name: '4', uv: 500, pv: 0, amt: 0}]
+  // Handle switching between tabs:
+  const handleClick = (name) =>
+    setCurrentTab(tabs.findIndex(tab => tab.name === name))
 
   return (
     <div className="App">
-      <Header tabs={tabs}/>
-      <LineChartVisu data={defaultdata} title={'Test figure'}/>
-      <CourseList courselist={courselist} setCourselist={setCourselist}></CourseList>
+      <Header tabs={tabs} handleClick={handleClick}/>
+      <VisuTab tabs={tabs} visuIndex={currentTab} />
     </div>
   );
 }
