@@ -6,7 +6,9 @@ COPY package*.json ./
 
 RUN npm install
 
-RUN npm install recharts
+RUN npm install recharts --save
+
+RUN npm install axios --save
 
 COPY . .
 
