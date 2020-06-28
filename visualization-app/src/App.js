@@ -8,8 +8,14 @@ import ProgressTab from './components/ProgressTab'
 import ResultTab from './components/ResultTab'
 import CoursesTab from './components/CoursesTab'
 
-const VisuTab = ({tabs, visuIndex}) =>
-  <>{tabs[visuIndex].visu}</>
+const VisuTab = ({tab}) => {
+  return (
+    <>
+      <h1>{tab.name}</h1>
+      {tab.visu}
+    </>
+  )
+}
 
 function App() {
 
@@ -40,7 +46,7 @@ function App() {
   return (
     <div className="App">
       <Header tabs={tabs} handleClick={handleClick}/>
-      <VisuTab tabs={tabs} visuIndex={currentTab} />
+      <VisuTab tab={tabs[currentTab]} visuIndex={currentTab} />
     </div>
   );
 }

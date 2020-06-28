@@ -16,7 +16,7 @@ const StatusTab = () => {
   return (
     <>
       <LineChartVisu data={defaultdata} title={'Test figure'}/>
-      <CourseList courselist={courseList} setCourselist={setCourselist}></CourseList>
+      <CourseList courselist={courseList} setCourselist={setCourselist} title='List of courses'></CourseList>
     </>
   )
 }

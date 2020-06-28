@@ -45,6 +45,19 @@ div .intended {
   padding-left: 3em;
 }
 
+h1, h2, h3 {
+  font-weight: normal;
+  padding-left: 2vh;
+}
+
+h2 {
+  padding-left: 4vh;
+}
+
+h3 {
+  padding-left: 6vh;
+}
+
 .Header-button {
   background-color: #282c34;
   font-size: 1em;
@@ -54,6 +67,7 @@ div .intended {
   border: #757575 1px solid;
   border-radius: 0.25em;
   margin-left: 0.25em;
+  font-size: smaller;
 }
 
 .Header-button:hover {
