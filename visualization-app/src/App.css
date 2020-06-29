@@ -42,7 +42,11 @@
 }
 
 div .intended {
-  padding-left: 3em;
+  padding-left: 2vh;
+}
+
+.intendedChart {
+  padding-left: 4vh;
 }
 
 h1, h2, h3 {

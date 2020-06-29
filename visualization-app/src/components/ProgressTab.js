@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
-import LineChartVisu from './LineChartVisu';
 import dataService from '../services/studentData'
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Brush } from 'recharts';
 
 const ProgressTab = () => {
 
@@ -49,19 +49,35 @@ const ProgressTab = () => {
     })
   }
 
+  const axisNames = ['Week', 'Points']
+  const syncKey = 'syncKey'
+
   return (
     <>
-      <LineChartVisu data={filterWeeks(weeklyPoints)}
-                     title={'Weekly Points'}
-                     keys={studentIds}
-                     axisNames={['Week', ''/*'Points'*/]}>
-      </LineChartVisu>
+      <h2>{'Weekly Points'}</h2>
       
-      <LineChartVisu data={filterWeeks(cumulativeWeeklyPoints)}
-                     title={'Cumulative Weekly Points'}
-                     keys={studentIds}
-                     axisNames={['Week', ''/*'Points'*/]}>
-      </LineChartVisu>
+      <LineChart className="intendedChart" width={document.documentElement.clientWidth*0.9} height={260}
+        data={filterWeeks(weeklyPoints)} syncId={syncKey}
+        margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
+        <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
+        <Tooltip />
+        {studentIds.map(key => <Line key={key} type="linear" dataKey={key} stroke="#8884d8" />)}
+      </LineChart>
+
+      <h2>{'Cumulative Weekly Points'}</h2>
+      
+      <LineChart className="intendedChart" width={document.documentElement.clientWidth*0.9} height={300}
+        data={filterWeeks(cumulativeWeeklyPoints)} syncId={syncKey}
+        margin={{ top: 10, right: 15, left: 25, bottom: 40 }}>
+        <CartesianGrid strokeDasharray="3 3" />
+        <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
+        <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
+        <Tooltip />
+        {studentIds.map(key => <Line key={key} type="linear" dataKey={key} stroke="#8884d8" />)}
+        <Brush y={255}></Brush>
+      </LineChart>
     </>
   )
 }
