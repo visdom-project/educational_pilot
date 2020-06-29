@@ -1,29 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import dataService from '../services/studentData'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Brush } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 'recharts';
 
 const ProgressTab = () => {
 
   const [ studentIds, setStudentIds ] = useState([])
   const [ weeklyPoints, setWeeklyPoints ] = useState([])
-  const [ cumulativeWeeklyPoints, setcumulativeWeeklyPoints ] = useState([])
-  const [ weeks, setWeeks ] = useState([])
-  const [ weeksToShow, setWeeksToShow ] = useState()
+  const [ cumulativeWeeklyPoints, setCumulativeWeeklyPoints ] = useState([])
+  const [ averagePoints, setAveragePoints ] = useState([])
+  const [ averageCumulative, setaverageCumulative ] = useState([])
 
   useEffect(
     () => {
-      setStudentIds(dataService.getStudentIds())
-
+      const ids = dataService.getStudentIds()
+      setStudentIds(ids)
       const weeks = dataService.getWeeks()
-      setWeeks(weeks)
-
-      const formatted = weeks.map(weekname => {
-        return {name: weekname}
-      })
-      const formattedCumulative = weeks.map(weekname => {
-        return {name: weekname}
-      })
-
+      const formatted = weeks.map(weekname => {return {name: weekname}})
+      const formattedCumulative = weeks.map(weekname => {return {name: weekname}})
       const pointData = dataService.getAllPoints()
       
       pointData.forEach(student => {
@@ -36,47 +29,106 @@ const ProgressTab = () => {
           formattedCumulative[keyname -1][student.id] = pointObject[keyname]
         })
       });
-      setWeeklyPoints(formatted)
-      setcumulativeWeeklyPoints(formattedCumulative)
 
-      setWeeksToShow(weeks)
+      const weekAvgs = []
+      formatted.forEach(weekPoints => {
+        let weekAvg = 0
+        ids.forEach(studentId => {
+          weekAvg += weekPoints[studentId]
+        })
+        weekAvgs.push(weekAvg/ids.length)
+      })
+
+      const weekCumulativeAvgs = []
+      formattedCumulative.forEach(weekPoints => {
+        let weekAvg = 0
+        ids.forEach(studentId => {
+          weekAvg += weekPoints[studentId]
+        })
+        weekCumulativeAvgs.push(weekAvg/ids.length)
+      })
+
+      const catenatedPoints = formatted.map(wPoints => {
+        return {...wPoints, "avg": weekAvgs[wPoints.name-1]}
+      })
+      const catenatedCumulative = formattedCumulative.map(wPoints => {
+        return {...wPoints, "avg": weekCumulativeAvgs[wPoints.name-1]}
+      })
+      
+      setWeeklyPoints(catenatedPoints)
+      setCumulativeWeeklyPoints(catenatedCumulative)
+      setAveragePoints(weekAvgs)
+      setaverageCumulative(weekCumulativeAvgs)
     }, []
   )
 
-  const filterWeeks = (formattedData) => {
-    return formattedData.filter(week => {
-      return weeksToShow.includes(week.name)
-    })
-  }
-
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
+  const [chartWidth, setChartWidth ] = useState(document.documentElement.clientWidth*0.9)
+  const chartHeight = 260
+  const selectorHeight = 40
+
+  const handleClick = (key) => {
+    console.log("opiskelija:", key);
+  }
+
+  const handleResize = () => {
+    setChartWidth(document.documentElement.clientWidth*0.9)
+    // TODO: keksi mihin resizen kutsun laittaa
+  }
 
   return (
     <>
       <h2>{'Weekly Points'}</h2>
       
-      <LineChart className="intendedChart" width={document.documentElement.clientWidth*0.9} height={260}
-        data={filterWeeks(weeklyPoints)} syncId={syncKey}
-        margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
+      <LineChart className="intendedChart"
+                 width={chartWidth} height={chartHeight}
+                 data={weeklyPoints} syncId={syncKey}
+                 margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
+        
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
-        <Tooltip />
-        {studentIds.map(key => <Line key={key} type="linear" dataKey={key} stroke="#8884d8" />)}
+        
+        <Line type="linear" dataKey={"avg"} stroke="#b1b1b1" dot={false} strokeWidth={2}/>
+        {studentIds.map(key => 
+          <Line key={key}
+                onClick={() => handleClick(key)}
+                className="hoverable" 
+                type="linear"
+                dataKey={key}
+                stroke="#8884d8">
+          </Line>
+        )}
+        
+        <Tooltip></Tooltip>
       </LineChart>
 
       <h2>{'Cumulative Weekly Points'}</h2>
       
-      <LineChart className="intendedChart" width={document.documentElement.clientWidth*0.9} height={300}
-        data={filterWeeks(cumulativeWeeklyPoints)} syncId={syncKey}
-        margin={{ top: 10, right: 15, left: 25, bottom: 40 }}>
+      <LineChart className="intendedChart"
+                 width={chartWidth} height={chartHeight+selectorHeight}
+                 data={cumulativeWeeklyPoints} syncId={syncKey}
+                 margin={{ top: 10, right: 15, left: 25, bottom: selectorHeight }}>
+
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
-        <Tooltip />
-        {studentIds.map(key => <Line key={key} type="linear" dataKey={key} stroke="#8884d8" />)}
-        <Brush y={255}></Brush>
+        
+        <Line type="linear" dataKey={"avg"} stroke="#b1b1b1" dot={false} strokeWidth={2}/>
+        {studentIds.map(key =>
+          <Line key={key}
+                onClick={() => handleClick(key)}
+                className="hoverable"
+                type="linear"
+                dataKey={key}
+                stroke="#8884d8">
+          </Line>
+        )}
+        
+        <Tooltip></Tooltip>
+        
+        <Brush y={chartHeight-5} tickFormatter={(tick) => tick + 1}></Brush>
       </LineChart>
     </>
   )
