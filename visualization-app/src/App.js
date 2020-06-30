@@ -11,26 +11,26 @@ import Footer from './components/Footer'
 
 const VisuTab = ({tab}) => {
   return (
-    <>
+    <div className="view">
       <h1>{tab.name}</h1>
       {tab.visu}
-    </>
+    </div>
   )
 }
 
 function App() {
 
-  const [currentTab, setCurrentTab] = useState(0)
+  const [ currentTab, setCurrentTab ] = useState(0)
 
   const tabs = [
     { name: 'Status view', 
       visu: <StatusTab />
     },
-    { name: 'Student view',
-      visu: <StudentTab />
-    },
     { name: 'Progress view',
       visu: <ProgressTab />
+    },
+    { name: 'Student view',
+      visu: <StudentTab />
     },
     { name: 'Result view',
       visu: <ResultTab />

@@ -83,10 +83,11 @@ const ProgressTab = () => {
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
   const [chartWidth, setChartWidth ] = useState(document.documentElement.clientWidth*0.9)
-  const chartHeight = 260
+  const chartHeight = 360
   const selectorHeight = 40
 
   const handleClick = (key) => {
+    console.log("TODO: Näytä opiskelijan tiedot");
     console.log("opiskelija:", key);
   }
 
