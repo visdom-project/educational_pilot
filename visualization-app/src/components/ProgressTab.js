@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react'
 import dataService from '../services/studentData'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 'recharts';
+import DropdownMenu from './DropdownMenu'
+
+const Controls = ({handleClick, options, setOption}) => {
+  return (
+    <div className="fit-row">
+      <DropdownMenu handleClick={handleClick} options={options} setOption={setOption}></DropdownMenu>
+      <button id={"showGradesButton"}>Show grades</button>
+    </div>
+  )
+}
 
 const ProgressTab = () => {
 
@@ -9,6 +19,10 @@ const ProgressTab = () => {
   const [ cumulativeWeeklyPoints, setCumulativeWeeklyPoints ] = useState([])
   const [ averagePoints, setAveragePoints ] = useState([])
   const [ averageCumulative, setaverageCumulative ] = useState([])
+
+  const [ statusParameters, setStatusParameters ] = useState([])
+  const [ displayedStatuses, setDisplayedStatuses ] = useState([])
+  const [ selectedStatus, setSelectedStatus ] = useState("")
 
   useEffect(
     () => {
@@ -59,6 +73,10 @@ const ProgressTab = () => {
       setCumulativeWeeklyPoints(catenatedCumulative)
       setAveragePoints(weekAvgs)
       setaverageCumulative(weekCumulativeAvgs)
+
+      setStatusParameters(["points", "exercises", "commits"])
+      setSelectedStatus("points")
+      setDisplayedStatuses(["exercises", "commits"])
     }, []
   )
 
@@ -77,10 +95,19 @@ const ProgressTab = () => {
     // TODO: keksi mihin resizen kutsun laittaa
   }
 
+  const handleStatusClick = (newStatus) => {
+    setSelectedStatus(newStatus)
+    const newOptions = statusParameters
+    setDisplayedStatuses(newOptions.filter(name => name!==newStatus))
+  }
+
   return (
     <>
-      <h2>{'Weekly Points'}</h2>
-      
+      <div className="fit-row">
+        <h2>{'Weekly Points'}</h2>
+        <Controls handleClick={handleStatusClick} options={displayedStatuses} setOption={selectedStatus}></Controls>
+      </div>
+
       <LineChart className="intendedChart"
                  width={chartWidth} height={chartHeight}
                  data={weeklyPoints} syncId={syncKey}

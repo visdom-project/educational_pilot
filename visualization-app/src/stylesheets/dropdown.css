@@ -1,0 +1,48 @@
+
+.dropdown-menu {
+  margin: 0 4vh;
+}
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropdown-title-button {
+  border: none;
+  font-family: inherit;
+  font-size: unset;
+  min-width: 10em;
+  padding: 10px;
+}
+
+.dropdown-options {
+  display: none;
+  position: absolute;
+  min-width: 10em;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  z-index: 1;
+}
+
+.dropdown-options button {
+  min-width: inherit;
+  display: block;
+  border: none;
+  font-family: inherit;
+  font-size: unset;
+  padding: 10px;
+}
+/* Change color of dropdown links on hover */
+.dropdown-options button:hover {
+  background-color: #ddd;
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-options {
+  display: block;
+}
+
+/* Change the background color of the dropdown button when the dropdown content is shown */
+.dropdown:hover .dropdown-title-button {
+  background-color: #ddd;
+}
