@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 're
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentSelector from './StudentSelector'
+import helperService from '../services/helpers'
 
 const Controls = (props) => {
   const {handleClick, options, selectedOption, showableLines,
@@ -27,8 +28,6 @@ const ProgressTab = () => {
   const [ studentIds, setStudentIds ] = useState([])
   const [ weeklyPoints, setWeeklyPoints ] = useState([])
   const [ cumulativeWeeklyPoints, setCumulativeWeeklyPoints ] = useState([])
-  const [ averagePoints, setAveragePoints ] = useState([])
-  const [ averageCumulative, setaverageCumulative ] = useState([])
 
   const [ statusParameters, setStatusParameters ] = useState([])
   const [ displayedStatuses, setDisplayedStatuses ] = useState([])
@@ -40,65 +39,6 @@ const ProgressTab = () => {
 
   const [ displayedStudents, setDisplayedStudents ] = useState([])
 
-  useEffect(
-    () => {
-      const ids = dataService.getStudentIds()
-      setStudentIds(ids)
-      const weeks = dataService.getWeeks()
-      const formatted = weeks.map(weekname => {return {name: weekname}})
-      const formattedCumulative = weeks.map(weekname => {return {name: weekname}})
-      const pointData = dataService.getAllPoints()
-      
-      pointData.forEach(student => {
-        student.points.forEach(pointObject => {
-          let keyname = Object.keys(pointObject)[0]
-          formatted[keyname -1][student.id] = pointObject[keyname]
-        })
-        student.cumulativePoints.forEach(pointObject => {
-          let keyname = Object.keys(pointObject)[0]
-          formattedCumulative[keyname -1][student.id] = pointObject[keyname]
-        })
-      });
-
-      const weekAvgs = []
-      formatted.forEach(weekPoints => {
-        let weekAvg = 0
-        ids.forEach(studentId => {
-          weekAvg += weekPoints[studentId]
-        })
-        weekAvgs.push(weekAvg/ids.length)
-      })
-
-      const weekCumulativeAvgs = []
-      formattedCumulative.forEach(weekPoints => {
-        let weekAvg = 0
-        ids.forEach(studentId => {
-          weekAvg += weekPoints[studentId]
-        })
-        weekCumulativeAvgs.push(weekAvg/ids.length)
-      })
-
-      const catenatedPoints = formatted.map(wPoints => {
-        return {...wPoints, "avg": weekAvgs[wPoints.name-1]}
-      })
-      const catenatedCumulative = formattedCumulative.map(wPoints => {
-        return {...wPoints, "avg": weekCumulativeAvgs[wPoints.name-1]}
-      })
-      
-      setWeeklyPoints(catenatedPoints)
-      setCumulativeWeeklyPoints(catenatedCumulative)
-      setAveragePoints(weekAvgs)
-      setaverageCumulative(weekCumulativeAvgs)
-
-      setStatusParameters(["points", "exercises", "commits"])
-      setSelectedStatus("points")
-      setDisplayedStatuses(["exercises", "commits"])
-      setShowableLines(["Average", "Expected"])
-
-      setDisplayedStudents(ids)
-    }, []
-  )
-
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
   const avgDataKey = 'avg'
@@ -107,6 +47,33 @@ const ProgressTab = () => {
   const selectorHeight = 40
   const avgStrokeWidth = 1
   const studentStrokeWidth = 2
+
+  useEffect(
+    () => {
+      const ids = dataService.getStudentIds()
+      const weeks = dataService.getWeeks()
+      const pointData = dataService.getAllPoints()
+      
+      const [points, cumulativePoints] = helperService.formatPointData(pointData, weeks)
+
+      const weekAvgs = helperService.calculateWeeklyAvgs(points, ids)
+      const weekCumulativeAvgs = helperService.calculateWeeklyAvgs(cumulativePoints, ids)
+      
+      const catenatedPoints = helperService.catenateAvgsToPts(points, weekAvgs)
+      const catenatedCumulative = helperService.catenateAvgsToPts(cumulativePoints, weekCumulativeAvgs)
+
+      setStudentIds(ids)
+      setWeeklyPoints(catenatedPoints)
+      setCumulativeWeeklyPoints(catenatedCumulative)
+      
+      setStatusParameters(["points", "exercises", "commits"])
+      setSelectedStatus("points")
+      setDisplayedStatuses(["exercises", "commits"])
+      setShowableLines(["Average", "Expected"])
+
+      setDisplayedStudents(ids)
+    }, []
+  )
 
   // Toggle selection of a student that is clicked in the student list:
   const handleListClick = (id) => {
