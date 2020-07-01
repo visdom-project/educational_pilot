@@ -17,7 +17,8 @@ const Controls = (props) => {
                     showExpected={showExpected}/>
       <DropdownMenu handleClick={handleClick}
                     options={modes}
-                    selectedOption={selectedMode} />
+                    selectedOption={selectedMode}
+                    title={'Visualization mode:'}/>
       <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
     </div>
   )
