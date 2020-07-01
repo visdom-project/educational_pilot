@@ -3,20 +3,21 @@ import dataService from '../services/studentData'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 'recharts';
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
+import StudentSelector from './StudentSelector'
 
 const Controls = (props) => {
   const {handleClick, options, selectedOption, showableLines,
-         handleLineClick, showAvg, showExpected} = props
+         handleToggleRefLineVisibilityClick, showAvg, showExpected} = props
   return (
     <div className="fit-row">
       <CheckBoxMenu options={showableLines}
-                    handleClick={handleLineClick}
+                    handleClick={handleToggleRefLineVisibilityClick}
                     showAvg={showAvg}
                     showExpected={showExpected}/>
       <DropdownMenu handleClick={handleClick}
                     options={options}
                     selectedOption={selectedOption} />
-      <button id={"showGradesButton"}>Show grades</button>
+      <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
     </div>
   )
 }
@@ -36,6 +37,8 @@ const ProgressTab = () => {
   const [ showableLines, setShowableLines ] = useState([])
   const [ showAvg, setShowAvg ] = useState(true)
   const [ showExpected, setShowExpected ] = useState(true)
+
+  const [ displayedStudents, setDisplayedStudents ] = useState([])
 
   useEffect(
     () => {
@@ -91,25 +94,36 @@ const ProgressTab = () => {
       setSelectedStatus("points")
       setDisplayedStatuses(["exercises", "commits"])
       setShowableLines(["Average", "Expected"])
+
+      setDisplayedStudents(ids)
     }, []
   )
 
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
   const avgDataKey = 'avg'
-  const [ chartWidth, setChartWidth ] = useState(document.documentElement.clientWidth*0.9)
-  const chartHeight = 360
+  const chartWidth = document.documentElement.clientWidth*0.9
+  const chartHeight = 320
   const selectorHeight = 40
-  const avgStrokeWidth = 2
+  const avgStrokeWidth = 1
+  const studentStrokeWidth = 2
 
-  const handleClick = (key) => {
-    console.log("TODO: Näytä opiskelijan tiedot");
-    console.log("opiskelija:", key);
+  // Toggle selection of a student that is clicked in the student list:
+  const handleListClick = (id) => {
+    const targetNode = document.querySelector(`#li-${id}`)
+    if (targetNode.style.color === "grey") {
+      setDisplayedStudents(displayedStudents.concat(id))
+      targetNode.style.color = "black"
+    }
+    else {
+      handleStudentLineClick(id)
+    }
   }
 
-  const handleResize = () => {
-    setChartWidth(document.documentElement.clientWidth*0.9)
-    // TODO: keksi mihin resizen kutsun laittaa
+  // Hide student that was clicked from the chart:
+  const handleStudentLineClick = (key) => {
+    setDisplayedStudents(displayedStudents.filter(student => student !== key))
+    document.querySelector(`#li-${key}`).style.color = "grey"
   }
 
   const handleStatusClick = (newStatus) => {
@@ -117,7 +131,7 @@ const ProgressTab = () => {
     setDisplayedStatuses(statusParameters.filter(name => name !== newStatus))
   }
 
-  const handleLineClick = (targetLine) => {
+  const handleToggleRefLineVisibilityClick = (targetLine) => {
     if (targetLine === "Expected") { setShowExpected(!showExpected) }
     else {
       // Toggle average lines visibility:
@@ -133,11 +147,14 @@ const ProgressTab = () => {
 
   return (
     <>
+      <StudentSelector students={studentIds} handleClick={handleListClick} />
+
       <div className="fit-row">
         <h2>{'Weekly Points'}</h2>
         <Controls handleClick={handleStatusClick}
                   options={displayedStatuses} selectedOption={selectedStatus}
-                  showableLines={showableLines} handleLineClick={handleLineClick}
+                  showableLines={showableLines}
+                  handleToggleRefLineVisibilityClick={handleToggleRefLineVisibilityClick}
                   showAvg={showAvg} showExpected={showExpected}>
         </Controls>
       </div>
@@ -153,13 +170,14 @@ const ProgressTab = () => {
         
         <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
               stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
-        {studentIds.map(key => 
+        {displayedStudents.map(key => 
           <Line key={key}
-                onClick={() => handleClick(key)}
+                onClick={() => handleStudentLineClick(key)}
                 className="hoverable" 
                 type="linear"
                 dataKey={key}
-                stroke="#8884d8">
+                stroke="#8884d8"
+                strokeWidth={studentStrokeWidth}>
           </Line>
         )}
         
@@ -179,13 +197,14 @@ const ProgressTab = () => {
         
         <Line type="linear" dataKey={avgDataKey} dot={false}
               stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
-        {studentIds.map(key =>
+        {displayedStudents.map(key =>
           <Line key={key}
-                onClick={() => handleClick(key)}
+                onClick={() => handleStudentLineClick(key)}
                 className="hoverable"
                 type="linear"
                 dataKey={key}
-                stroke="#8884d8">
+                stroke="#8884d8"
+                strokeWidth={studentStrokeWidth}>
           </Line>
         )}
         
