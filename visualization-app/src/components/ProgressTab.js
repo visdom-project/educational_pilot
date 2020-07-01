@@ -7,7 +7,7 @@ import StudentSelector from './StudentSelector'
 import helperService from '../services/helpers'
 
 const Controls = (props) => {
-  const {handleClick, options, selectedOption, showableLines,
+  const {handleClick, modes, selectedMode, showableLines,
          handleToggleRefLineVisibilityClick, showAvg, showExpected} = props
   return (
     <div className="fit-row">
@@ -16,8 +16,8 @@ const Controls = (props) => {
                     showAvg={showAvg}
                     showExpected={showExpected}/>
       <DropdownMenu handleClick={handleClick}
-                    options={options}
-                    selectedOption={selectedOption} />
+                    options={modes}
+                    selectedOption={selectedMode} />
       <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
     </div>
   )
@@ -29,9 +29,9 @@ const ProgressTab = () => {
   const [ weeklyPoints, setWeeklyPoints ] = useState([])
   const [ cumulativeWeeklyPoints, setCumulativeWeeklyPoints ] = useState([])
 
-  const [ statusParameters, setStatusParameters ] = useState([])
-  const [ displayedStatuses, setDisplayedStatuses ] = useState([])
-  const [ selectedStatus, setSelectedStatus ] = useState("")
+  const [ modes, setModes ] = useState([])
+  const [ displayedModes, setdisplayedModes ] = useState([])
+  const [ selectedMode, setSelectedMode ] = useState("")
 
   const [ showableLines, setShowableLines ] = useState([])
   const [ showAvg, setShowAvg ] = useState(true)
@@ -66,9 +66,9 @@ const ProgressTab = () => {
       setWeeklyPoints(catenatedPoints)
       setCumulativeWeeklyPoints(catenatedCumulative)
       
-      setStatusParameters(["points", "exercises", "commits"])
-      setSelectedStatus("points")
-      setDisplayedStatuses(["exercises", "commits"])
+      setModes(["points", "exercises", "commits"])
+      setSelectedMode("points")
+      setdisplayedModes(["exercises", "commits"])
       setShowableLines(["Average", "Expected"])
 
       setDisplayedStudents(ids)
@@ -93,9 +93,9 @@ const ProgressTab = () => {
     document.querySelector(`#li-${key}`).style.color = "grey"
   }
 
-  const handleStatusClick = (newStatus) => {
-    setSelectedStatus(newStatus)
-    setDisplayedStatuses(statusParameters.filter(name => name !== newStatus))
+  const handleModeClick = (newMode) => {
+    setSelectedMode(newMode)
+    setdisplayedModes(modes.filter(name => name !== newMode))
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
@@ -118,8 +118,8 @@ const ProgressTab = () => {
 
       <div className="fit-row">
         <h2>{'Weekly Points'}</h2>
-        <Controls handleClick={handleStatusClick}
-                  options={displayedStatuses} selectedOption={selectedStatus}
+        <Controls handleClick={handleModeClick}
+                  modes={displayedModes} selectedMode={selectedMode}
                   showableLines={showableLines}
                   handleToggleRefLineVisibilityClick={handleToggleRefLineVisibilityClick}
                   showAvg={showAvg} showExpected={showExpected}>
