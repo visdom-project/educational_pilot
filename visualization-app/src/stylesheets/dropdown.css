@@ -14,6 +14,7 @@
   font-size: unset;
   min-width: 10em;
   padding: 10px;
+  height: 3em;
 }
 
 .dropdown-options {
@@ -31,6 +32,7 @@
   font-family: inherit;
   font-size: unset;
   padding: 10px;
+  height: 3em;
 }
 /* Change color of dropdown links on hover */
 .dropdown-options button:hover {

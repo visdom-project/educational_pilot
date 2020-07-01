@@ -2,11 +2,20 @@ import React, { useState, useEffect } from 'react'
 import dataService from '../services/studentData'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 'recharts';
 import DropdownMenu from './DropdownMenu'
+import CheckBoxMenu from './CheckBoxMenu'
 
-const Controls = ({handleClick, options, setOption}) => {
+const Controls = (props) => {
+  const {handleClick, options, selectedOption, showableLines,
+         handleLineClick, showAvg, showExpected} = props
   return (
     <div className="fit-row">
-      <DropdownMenu handleClick={handleClick} options={options} setOption={setOption}></DropdownMenu>
+      <CheckBoxMenu options={showableLines}
+                    handleClick={handleLineClick}
+                    showAvg={showAvg}
+                    showExpected={showExpected}/>
+      <DropdownMenu handleClick={handleClick}
+                    options={options}
+                    selectedOption={selectedOption} />
       <button id={"showGradesButton"}>Show grades</button>
     </div>
   )
@@ -23,6 +32,10 @@ const ProgressTab = () => {
   const [ statusParameters, setStatusParameters ] = useState([])
   const [ displayedStatuses, setDisplayedStatuses ] = useState([])
   const [ selectedStatus, setSelectedStatus ] = useState("")
+
+  const [ showableLines, setShowableLines ] = useState([])
+  const [ showAvg, setShowAvg ] = useState(true)
+  const [ showExpected, setShowExpected ] = useState(true)
 
   useEffect(
     () => {
@@ -77,14 +90,17 @@ const ProgressTab = () => {
       setStatusParameters(["points", "exercises", "commits"])
       setSelectedStatus("points")
       setDisplayedStatuses(["exercises", "commits"])
+      setShowableLines(["Average", "Expected"])
     }, []
   )
 
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
-  const [chartWidth, setChartWidth ] = useState(document.documentElement.clientWidth*0.9)
+  const avgDataKey = 'avg'
+  const [ chartWidth, setChartWidth ] = useState(document.documentElement.clientWidth*0.9)
   const chartHeight = 360
   const selectorHeight = 40
+  const avgStrokeWidth = 2
 
   const handleClick = (key) => {
     console.log("TODO: Näytä opiskelijan tiedot");
@@ -98,15 +114,32 @@ const ProgressTab = () => {
 
   const handleStatusClick = (newStatus) => {
     setSelectedStatus(newStatus)
-    const newOptions = statusParameters
-    setDisplayedStatuses(newOptions.filter(name => name!==newStatus))
+    setDisplayedStatuses(statusParameters.filter(name => name !== newStatus))
+  }
+
+  const handleLineClick = (targetLine) => {
+    if (targetLine === "Expected") { setShowExpected(!showExpected) }
+    else {
+      // Toggle average lines visibility:
+      const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
+      lines.forEach(node => {
+        if (node.outerHTML.includes(`stroke-width="${avgStrokeWidth}"`)) {
+          node.style.display = showAvg ? "none" : ""
+        }
+      })
+      setShowAvg(!showAvg)
+    }
   }
 
   return (
     <>
       <div className="fit-row">
         <h2>{'Weekly Points'}</h2>
-        <Controls handleClick={handleStatusClick} options={displayedStatuses} setOption={selectedStatus}></Controls>
+        <Controls handleClick={handleStatusClick}
+                  options={displayedStatuses} selectedOption={selectedStatus}
+                  showableLines={showableLines} handleLineClick={handleLineClick}
+                  showAvg={showAvg} showExpected={showExpected}>
+        </Controls>
       </div>
 
       <LineChart className="intendedChart"
@@ -118,7 +151,8 @@ const ProgressTab = () => {
         <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
-        <Line type="linear" dataKey={"avg"} stroke="#b1b1b1" dot={false} strokeWidth={2}/>
+        <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
+              stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
         {studentIds.map(key => 
           <Line key={key}
                 onClick={() => handleClick(key)}
@@ -143,7 +177,8 @@ const ProgressTab = () => {
         <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
-        <Line type="linear" dataKey={"avg"} stroke="#b1b1b1" dot={false} strokeWidth={2}/>
+        <Line type="linear" dataKey={avgDataKey} dot={false}
+              stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
         {studentIds.map(key =>
           <Line key={key}
                 onClick={() => handleClick(key)}
