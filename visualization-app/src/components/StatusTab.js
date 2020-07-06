@@ -27,9 +27,22 @@ const Controls = (props) => {
   )
 }
 
-const StudentDetailView = () => {
+const StudentDetailView = ({student}) => {
+  
+  if (student === "") {
+    return (
+      <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
+        <h2>{'Student Details'}</h2>
+        <div className="intended">Click a student to view details.</div>
+      </div>
+    )
+  }
+
   return (
-    <h2>{'Student Details'}</h2>
+    <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
+      <h2>{'Student Details'}</h2>
+      <div className="intended">Student: {student}</div>
+    </div>
   )
 }
 
@@ -48,6 +61,8 @@ const StatusTab = () => {
   const [ showableLines, setShowableLines ] = useState([])
   const [ showAvg, setShowAvg ] = useState(true)
   const [ showExpected, setShowExpected ] = useState(true)
+
+  const [ selectedStudent, setSelectedStudent ] = useState("")
 
   const axisNames = ['Students', 'Points']
   const dataKeys = {
@@ -85,9 +100,13 @@ const StatusTab = () => {
     }, []
   )
 
-  const handleStudentClick = (key) => {
-    /*setDisplayedStudents(displayedStudents.filter(student => student !== key))
-    document.querySelector(`#li-${key}`).style.color = "grey"*/
+  const handleStudentClick = (data, index) => {
+    
+    if (data !== undefined) {
+      const newSelected = data.id
+      setSelectedStudent(newSelected)
+      console.log("Selected student:", newSelected);
+    }
   }
 
   const handleModeSwitchClick = (newMode) => {
@@ -135,10 +154,11 @@ const StatusTab = () => {
 
       <MultiChart chartWidth={chartWidth} chartHeight={chartHeight}
                   data={progressData[selectedWeek-1]["data"]} dataKeys={dataKeys}
-                  axisNames={axisNames} max={max}>
+                  axisNames={axisNames} max={max}
+                  handleClick={handleStudentClick}>
       </MultiChart>
 
-      <StudentDetailView></StudentDetailView>
+      <StudentDetailView student={selectedStudent}></StudentDetailView>
     </>
   )
 }

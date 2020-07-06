@@ -1,5 +1,5 @@
 import React from 'react'
-import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Line } from 'recharts';
+import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Line, Cell } from 'recharts';
 
 const CustomTooltip = (props) => {
 
@@ -47,7 +47,7 @@ const CustomLabel = (props) => {
   return <></>
 }
 
-const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max }) => {
+const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max, handleClick }) => {
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
@@ -77,10 +77,30 @@ const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max })
 
         <Area type="monotone" dataKey="totPts" fill="#c3c3c3" stroke="#c3c3c3" />
         
-        <Bar dataKey={dataKeys["maxPoints"]} barSize={20} fill="white" stroke="black"/>
-        <Bar dataKey={dataKeys["week"]} barSize={20} fill="#4cce4c" />
-        <Bar dataKey={dataKeys["totalPoints"]} barSize={20} fill="green" />
-        <Bar dataKey={dataKeys["missed"]} barSize={20} fill="red" />
+        <Bar dataKey={dataKeys["maxPoints"]} barSize={20} fill="white" stroke="black">{
+          data !== undefined ?
+            data.map((entry, index) => 
+              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
+            ""}
+        </Bar>
+        <Bar dataKey={dataKeys["week"]} barSize={20} fill="#4cce4c" onClick={() => handleClick()}>{
+          data !== undefined ?
+            data.map((entry, index) => 
+              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
+            ""}
+        </Bar>
+        <Bar dataKey={dataKeys["totalPoints"]} barSize={20} fill="green" onClick={() => handleClick()}>{
+          data !== undefined ?
+            data.map((entry, index) => 
+              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
+            ""}
+        </Bar>
+        <Bar dataKey={dataKeys["missed"]} barSize={20} fill="red" onClick={() => handleClick()}>{
+          data !== undefined ?
+            data.map((entry, index) => 
+              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
+            ""}
+        </Bar>
 
         <Line type="monotone"
               dataKey={dataKeys["average"]}
