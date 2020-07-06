@@ -29,11 +29,33 @@ const CustomTooltip = (props) => {
   return <></>
 }
 
+const CustomLabel = (props) => {
+
+  const newDy = (props.pos === "above") ? "-0.5em" : "1em"
+  
+  if (props.index === 0) {
+    return (
+      <text x={props.x} y={props.y}
+            dy={newDy}
+            fill={props.color}
+            fontSize={10}
+            textAnchor="right">
+        {props.title}
+      </text>
+    )
+  }
+  return <></>
+}
+
 const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max }) => {
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
   ticks.push(max)
+
+  const averageColor = "#ff7300"
+  const mediumExpectedColor = "#000073"
+  const minimumExpectedColor = "#000073"
 
   return (
     <div className="intended">
@@ -60,9 +82,27 @@ const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max })
         <Bar dataKey={dataKeys["totalPoints"]} barSize={20} fill="green" />
         <Bar dataKey={dataKeys["missed"]} barSize={20} fill="red" />
 
-        <Line type="monotone" dataKey={dataKeys["average"]} stroke="#ff7300" dot={false} />
-        <Line type="monotone" dataKey={dataKeys["expectedMinimum"]} stroke="#000073" dot={false} />
-        <Line type="monotone" dataKey={dataKeys["expectedMedium"]} stroke="#000073" dot={false} />
+        <Line type="monotone"
+              dataKey={dataKeys["average"]}
+              stroke={averageColor}
+              dot={false}
+              label={<CustomLabel title={"Average"}
+                                  color={averageColor}
+                                  pos={"above"}/>}/>
+        <Line type="monotone"
+              dataKey={dataKeys["expectedMinimum"]}
+              stroke={minimumExpectedColor}
+              dot={false}
+              label={<CustomLabel title={"Expected Minimum"}
+                                  color={minimumExpectedColor}
+                                  pos={"below"}/>}/>
+        <Line type="monotone"
+              dataKey={dataKeys["expectedMedium"]}
+              stroke={mediumExpectedColor}
+              dot={false}
+              label={<CustomLabel title={"Expected Medium"}
+                                  color={mediumExpectedColor}
+                                  pos={"above"}/>}/>
 
       </ComposedChart>
     </div>
