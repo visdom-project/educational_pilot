@@ -1,39 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import dataService from '../services/studentData'
-import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Line } from 'recharts';
+import dataService from '../services/statusData'
+import MultiChart from './StatusChart'
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
-import helperService from '../services/helpers'
-
-const MultiChart = ({ chartWidth, chartHeight, data, axisNames, avgDataKey, expectedDataKey, ids }) => {
-  return (
-    <div className="intended">
-      <ComposedChart width={chartWidth} height={chartHeight} data={data}
-                     margin={{ top: 10, right: 15, left: 25, bottom: 25 }}
-                     barGap={-20}>
-        
-        <XAxis dataKey="name"
-               padding={{left: 0, right: 0}}
-               label={{ value: axisNames[0], position: 'bottom' }}/>
-        <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
-        
-        <Tooltip />
-        
-        <CartesianGrid stroke="#f5f5f5" />
-
-        <Area type="monotone" dataKey="cum" fill="#e5e7ff" stroke="#e5e7ff" />
-        
-        <Bar dataKey="maxCum" barSize={20} fill="#EEEEEE" stroke="lightgrey"/>
-        <Bar dataKey="week" barSize={20} fill="#413ea0" stroke="lightgrey"/>
-        <Bar dataKey="cum" barSize={20} fill="#BBBBFF" stroke="lightgrey"/>
-        <Bar dataKey="missed" barSize={20} fill="#FFFFFF" stroke="lightgrey"/>
-
-        <Line type="monotone" dataKey={avgDataKey} stroke="#ff7300" />
-        <Line type="monotone" dataKey={expectedDataKey} stroke="#000073" />
-      </ComposedChart>
-    </div>
-  )
-}
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
@@ -66,13 +35,11 @@ const StudentDetailView = () => {
 
 const StatusTab = () => {
 
-  /*const [ studentIds, setStudentIds ] = useState([])
-  const [ weeklyPoints, setWeeklyPoints ] = useState([])
-  const [ cumulativeWeeklyPoints, setCumulativeWeeklyPoints ] = useState([])*/
+  const [ progressData, setProgressData ] = useState([{"1": 0}])
+  const [ max, setMax ] = useState(0)
 
   const [ weeks, setWeeks ] = useState([])
-  const [ displayedWeeks, setdisplayedWeeks ] = useState([])
-  const [ selectedWeek, setSelectedWeek ] = useState("")
+  const [ selectedWeek, setSelectedWeek ] = useState("1")
 
   const [ modes, setModes ] = useState([])
   const [ displayedModes, setdisplayedModes ] = useState([])
@@ -83,37 +50,37 @@ const StatusTab = () => {
   const [ showExpected, setShowExpected ] = useState(true)
 
   const axisNames = ['Students', 'Points']
-  const avgDataKey = 'avg'
-  const expectedDataKey = 'exp'
+  const dataKeys = {
+    studentId: "id",
+    maxPoints: "maxPts",
+    week: "week",
+    totalPoints: "totPts",
+    missed: "missed",
+    average: 'avg',
+    expectedMinimum: 'min',
+    expectedMedium: 'mid'
+  }
   const chartWidth = document.documentElement.clientWidth*0.9
   const chartHeight = document.documentElement.clientHeight*0.5
+  
   useEffect(
     () => {
-      /*
-      const ids = dataService.getStudentIds()
+      const pData = dataService.getProgressData()
+      setProgressData(pData)
+      console.log(pData);
+
       const weeks = dataService.getWeeks()
-      const pointData = dataService.getAllPoints()
-      
-      const [points, cumulativePoints] = helperService.formatPointData(pointData, weeks)
+      const selected = weeks[weeks.length-1]
 
-      const weekAvgs = helperService.calculateWeeklyAvgs(points, ids)
-      const weekCumulativeAvgs = helperService.calculateWeeklyAvgs(cumulativePoints, ids)
-      
-      const catenatedPoints = helperService.catenateAvgsToPts(points, weekAvgs)
-      const catenatedCumulative = helperService.catenateAvgsToPts(cumulativePoints, weekCumulativeAvgs)
+      setWeeks(weeks)
+      setSelectedWeek(selected)
 
-      setStudentIds(ids)
-      setWeeklyPoints(catenatedPoints)
-      setCumulativeWeeklyPoints(catenatedCumulative)*/
-      
+      setMax(pData[selected-1]["data"][0].maxPts)
+
       setModes(["points", "exercises", "commits"])
       setSelectedMode("points")
       setdisplayedModes(["exercises", "commits"])
       
-      setWeeks(["1", "2", "3", "4", "5", "6", "7"])
-      setSelectedWeek("1")
-      setdisplayedWeeks(["2", "3", "4", "5", "6", "7"])
-
       setShowableLines(["Average", "Expected"])
     }, []
   )
@@ -130,7 +97,7 @@ const StatusTab = () => {
 
   const handleWeekSwitchClick = (newWeek) => {
     setSelectedWeek(newWeek)
-    setdisplayedModes(weeks.filter(week => week !== newWeek))
+    setMax(progressData[newWeek-1]["data"][0].maxPts)
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
@@ -147,81 +114,11 @@ const StatusTab = () => {
     }
   }
 
-  // Data format: maxCum: maksimipistekertymä viikon loppuun mennessä
-  //                week: tämän viikon pistemäärä + maksimikertymä viikon alkuun mennessä
-  //                 cum: maksimikertymä viikon alkuun mennessä
-  //                 out: maksimikertymä viikon alkuun mennessä - kertymä viikon alkuun mennessä
-  const data = [
-    {
-      "name": "123456",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    },
-    {
-      "name": "234567",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    },
-    {
-      "name": "345678",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    },
-    {
-      "name": "456789",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    },
-    {
-      "name": "567890",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    },
-    {
-      "name": "678901",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    },
-    {
-      "name": "789012",
-      "maxCum": 550,
-      "week": 500,
-      "cum": 460,
-      "missed": 20,
-      "avg": 348,
-      "exp": 230
-    }
-  ]
-
   return (
     <>
       <div className="fit-row">
         <h2>{'Current Student Statuses'}</h2>
-        <Controls handleClick={handleModeSwitchClick}
+        <Controls handleModeClick={handleModeSwitchClick}
                   modes={displayedModes} selectedMode={selectedMode}
                   showableLines={showableLines}
                   handleToggleRefLineVisibilityClick={handleToggleRefLineVisibilityClick}
@@ -231,8 +128,8 @@ const StatusTab = () => {
       </div>
 
       <MultiChart chartWidth={chartWidth} chartHeight={chartHeight}
-                  data={data} avgDataKey={avgDataKey} expectedDataKey={expectedDataKey}
-                  axisNames={axisNames}>
+                  data={progressData[selectedWeek-1]["data"]} dataKeys={dataKeys}
+                  axisNames={axisNames} max={max}>
       </MultiChart>
 
       <StudentDetailView></StudentDetailView>

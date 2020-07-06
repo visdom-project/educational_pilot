@@ -1,20 +1,19 @@
 
-const pairPointsToWeeks = (pointArray, resultArray, student) => {
-  pointArray.forEach(pointObject => {
-    const keyname = Object.keys(pointObject)[0]
-    resultArray[keyname -1][student.id] = pointObject[keyname]
+const pairPointsToWeeks = (studentPoints, allPoints, id) => {
+  Object.keys(studentPoints).forEach(week => {
+    allPoints[parseInt(week)-1][id] = studentPoints[week]
   })
 }
 
-const formatPointData = (pointdata, weeks) => {
-  const formatted = weeks.map(weekname => {return {name: weekname}})
-  const formattedCumulative = weeks.map(weekname => {return {name: weekname}})
+const pointsByWeek = (pointdata, weeks) => {
+  const allWeeklyPoints = weeks.map(weekname => {return {week: weekname}})
+  const allWeeklyCumulatives = weeks.map(weekname => {return {week: weekname}})
 
   pointdata.forEach(student => {
-    pairPointsToWeeks(student.points, formatted, student)
-    pairPointsToWeeks(student.cumulativePoints, formattedCumulative, student)
+    pairPointsToWeeks(student.weeklyPoints, allWeeklyPoints, student.id)
+    pairPointsToWeeks(student.cumulativePoints, allWeeklyCumulatives, student.id)
   });
-  return [formatted, formattedCumulative]
+  return [allWeeklyPoints, allWeeklyCumulatives]
 }
 
 const calculateWeeklyAvgs = (points, studentIds) => {
@@ -31,8 +30,16 @@ const calculateWeeklyAvgs = (points, studentIds) => {
 
 const catenateAvgsToPts = (points, averages) => {
   return points.map(wPoints => {
-    return {...wPoints, "avg": averages[wPoints.name-1]}
+    return {...wPoints, 'weeklyAvgs': averages[wPoints.week-1]}
   })
 }
 
-export default { formatPointData, calculateWeeklyAvgs, catenateAvgsToPts };
+const calcCumulatives = (pointArray) => {
+  return Object.keys(pointArray).map(key => {
+    return pointArray.slice(0, key).reduce((sum, val) => {
+      return sum + val
+    }, 0)
+  })
+}
+
+export default { pointsByWeek, calculateWeeklyAvgs, catenateAvgsToPts, calcCumulatives };

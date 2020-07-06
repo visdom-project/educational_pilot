@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react'
-import dataService from '../services/studentData'
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 'recharts';
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentSelector from './StudentSelector'
-import helperService from '../services/helpers'
+import dataService from '../services/progressData'
 
 const Controls = (props) => {
   const {handleClick, modes, selectedMode, showableLines,
@@ -42,7 +41,8 @@ const ProgressTab = () => {
 
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
-  const avgDataKey = 'avg'
+  const avgDataKey = 'weeklyAvgs'
+  const dataKey = 'name'
   const chartWidth = document.documentElement.clientWidth*0.9
   const chartHeight = 320
   const selectorHeight = 40
@@ -52,21 +52,12 @@ const ProgressTab = () => {
   useEffect(
     () => {
       const ids = dataService.getStudentIds()
-      const weeks = dataService.getWeeks()
-      const pointData = dataService.getAllPoints()
+      const [weeklyPoints, cumulativePoints] = dataService.getWeeklyProgressPoints(avgDataKey)
       
-      const [points, cumulativePoints] = helperService.formatPointData(pointData, weeks)
-
-      const weekAvgs = helperService.calculateWeeklyAvgs(points, ids)
-      const weekCumulativeAvgs = helperService.calculateWeeklyAvgs(cumulativePoints, ids)
-      
-      const catenatedPoints = helperService.catenateAvgsToPts(points, weekAvgs)
-      const catenatedCumulative = helperService.catenateAvgsToPts(cumulativePoints, weekCumulativeAvgs)
-
       setStudentIds(ids)
-      setWeeklyPoints(catenatedPoints)
-      setCumulativeWeeklyPoints(catenatedCumulative)
-      
+      setWeeklyPoints(weeklyPoints)
+      setCumulativeWeeklyPoints(cumulativePoints)
+
       setModes(["points", "exercises", "commits"])
       setSelectedMode("points")
       setdisplayedModes(["exercises", "commits"])
@@ -133,7 +124,7 @@ const ProgressTab = () => {
                  margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
         
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
+        <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
         <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
@@ -160,7 +151,7 @@ const ProgressTab = () => {
                  margin={{ top: 10, right: 15, left: 25, bottom: selectorHeight }}>
 
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey="name" label={{ value: axisNames[0], position: 'bottom' }} />
+        <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
         <Line type="linear" dataKey={avgDataKey} dot={false}
