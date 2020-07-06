@@ -101,17 +101,23 @@ const StatusTab = () => {
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
-    if (targetLine === "Expected") { setShowExpected(!showExpected) }
-    else {
-      // Toggle average lines visibility:
-      /*const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
-      lines.forEach(node => {
-        if (node.outerHTML.includes(`stroke-width="${avgStrokeWidth}"`)) {
-          node.style.display = showAvg ? "none" : ""
-        }
-      })*/
-      setShowAvg(!showAvg)
-    }
+    
+    const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
+    
+    lines.forEach(node => {
+
+      const textContent = node.nextSibling.firstChild.textContent
+
+      // Toggle line visibility:
+      if (targetLine === "Expected" && textContent.includes("Expected")) {
+        setShowExpected(!showExpected)
+        node.parentNode.style.display = showExpected ? "none" : ""
+      }
+      else if (targetLine === "Average" && textContent === "Average") {
+        setShowAvg(!showAvg)
+        node.parentNode.style.display = showAvg ? "none" : ""
+      }
+    })
   }
 
   return (
