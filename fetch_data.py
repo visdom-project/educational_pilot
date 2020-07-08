@@ -11,7 +11,6 @@ def make_get_request(url, access_token="", headers=[], data=""):
     curl_obj = pycurl.Curl()
 
     curl_obj.setopt(curl_obj.URL, url)
-    #curl_obj.setopt(curl_obj.HEADERFUNCTION, display_header)   # Print header to stdout
     curl_obj.setopt(curl_obj.WRITEDATA, bytes_obj)
 
     if len(data) > 1:
@@ -23,22 +22,32 @@ def make_get_request(url, access_token="", headers=[], data=""):
     
     curl_obj.setopt(curl_obj.HTTPHEADER, headers)
 
-    curl_obj.perform()
+    try:
+        curl_obj.perform()
+    except pycurl.error as e:
+        print(e)
+        return {"Request failed."}
+    
     curl_obj.close()
 
     return bytes_obj.getvalue().decode('utf8')  # Body of the reply
 
 
-def make_put_request(url, data, header):
+def make_put_request(url, data, header, json_data=""):
 
-    data_buffer = BytesIO(data.encode('utf8'))
     response_buffer = BytesIO()
 
     curl_obj = pycurl.Curl()
 
     curl_obj.setopt(curl_obj.URL, url)
     curl_obj.setopt(curl_obj.UPLOAD, 1)
-    curl_obj.setopt(curl_obj.READDATA, data_buffer)
+
+    if json_data == "":
+        data_buffer = BytesIO(data.encode('utf8'))
+    else:
+        data_buffer = BytesIO(json.dumps(json_data).encode('utf-8'))
+    
+    curl_obj.setopt(curl_obj.READDATA, data_buffer)        
     curl_obj.setopt(curl_obj.HTTPHEADER, header)
     curl_obj.setopt(curl_obj.WRITEDATA, response_buffer)
 
@@ -46,12 +55,6 @@ def make_put_request(url, data, header):
     curl_obj.close()
 
     return response_buffer.getvalue().decode('utf8')
-
-
-def display_header(header_line):
-    header_line = header_line.decode('utf8')
-    print(header_line)
-    print()
 
 
 def get_arguments(api_names):
@@ -116,7 +119,7 @@ def read_secrets():
     if len(secrets) > 1:
         print("fetch_data.py: read some API URL and access key succesfully from secrets!\n")
     else:
-        print("fetch_data.py: Error: could not read any API url or access key from secrets!")
+        print("fetch_data.py: Did not read any API url or access key from secrets!")
     
     return secrets
 
@@ -142,13 +145,13 @@ def get_id():
     return document_id
 
 
-def write_to_elasticsearch(data, index='testindex', data_type='_doc', document_id=get_id()):
+def write_to_elasticsearch(data, index='testindex', data_type='_doc', document_id=get_id(), json_data=""):
     header = ['Content-Type: application/json']
 
-    url = 'http://localhost:9200/{:s}/{:s}/{:s}'.format(index, data_type, document_id)
+    url = 'http://localhost:9200/{:s}/{:s}/{:d}'.format(index, data_type, document_id)
 
     # curl -XPUT 'http://localhost:9200/testindex/_doc/1' -H 'Content-Type: application/json' -d '{"name":"John Doe"}'
-    return make_put_request(url, data, header)
+    return make_put_request(url, data, header, json_data=json_data)
 
 
 def search_elasticsearch(query, index=''):
@@ -189,30 +192,172 @@ def copy_api_point_to_index(url, access_token, api_name):
         if "error" in reply_body_json.keys():
             print("Error reply from Elastic:\n", reply_body)
             return False
+
+
+def fetch_api_to_ES(url, api_key, index_name, data_id, write_to_es=True):
     
+    # Get data from api
+    reply = make_get_request(url, api_key, [])
+
+    # Check that no error occured in getting course data and cast reply to json:
+    if reply == False:
+        print("error occured in get request from plussa API!")
+        print("Reply body:", reply)
+        return False
+    else:
+        print("Got requested data from API: {:s}".format(url))
+
+    # Write details into ES cluster with given index name:
+    if write_to_es:
+        print("Writing data to ElasticSearch... ", end="")
+        write_to_elasticsearch(reply, index=index_name, document_id=data_id)
+        print("Done.")
+    
+    return json.loads(reply)
+
+
+def get_agreements(api_key):
+    agreement_url = "https://plus.tuni.fi/api/v2/courses/40/submissiondata/?exercise_id=4543&format=json"
+    agreements = fetch_api_to_ES(agreement_url, api_key, "", 0, write_to_es=False)
+
+    list_of_agreed = []
+    for submission in agreements:
+        if submission["field_0"] == "a":
+            list_of_agreed.append(submission["StudentID"])
+
+    return list_of_agreed
+
+
+def parse_empty_fields(json_data):
+    for module in json_data:
+        
+        old = module["points_by_difficulty"]
+        new_dict = {}
+
+        for key in old:
+            value = old[key]
+
+            if key != "":
+                new_dict[key] = value
+            else:
+                new_dict["empty"] = value
+
+        module["points_by_difficulty"] = new_dict
+
+    return json_data
+
+
+def write_students(course_students_url, plussa_api_key, course_id, course_instance, page_id):
+
+    student_list_index_key = "plussa-course-{:d}-students".format(course_id)
+
+    # 7. Get student list details:
+    student_list_reply = fetch_api_to_ES(course_students_url, plussa_api_key, "", 0, write_to_es=False)
+    if student_list_reply == False:
+        return False
+
+    if course_instance["instance_name"] == "summer-2020":   ## Handling GDPR.
+        user_ids_of_agreed = get_agreements(plussa_api_key)
+
+        # Fetch point data for each student and write it to the student list:
+        for student in student_list_reply["results"]:
+
+            if student["student_id"] in user_ids_of_agreed:
+
+                # Fetch point data:
+                student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", 0, write_to_es=False)
+                if student_points_reply == False:
+                    return False
+
+                print("Remove some data: field: points_by_difficulty")
+                student_points_reply["points_by_difficulty"] = {}
+                student_points_reply["modules"] = parse_empty_fields(student_points_reply["modules"])
+
+                # Append point data to student info:
+                student["points"] = student_points_reply
+            
+            else:
+                # Redact student data:
+                for key in ["url", "username", "student_id", "email", "data"]:
+                    student[key] = "redacted_due_to_no_research_permission"
+                student["is_external"] = False
+                student["points"] = {}
+    else:
+        print("Can't save student data before implementing anonymization!")
+        student_list_reply["results"] = ["Redacted data"]
+        
+        # TODO: Anonymize student data
+        # Fetch point data for each student and write it to the student list:
+        #for student in student_list_reply["results"]:
+
+            # Fetch point data:
+            #student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", False)
+            #if student_points_reply == False:
+            #    return False
+
+            # Append point data to student info:
+            #student["point_data"] = student_points_reply
+
+    # 8. Write course student list with point data into the ES cluster:
+    print("Writing course student list with point data into the ES cluster...")
+    reply = write_to_elasticsearch(student_list_reply, student_list_index_key, document_id=page_id, json_data=student_list_reply)
+    print("Reply: ", reply)
+
+    return student_list_reply["next"]
+
 
 def main():
 
     # Read access tokens, api names and URLs:
     secrets = read_secrets()
-    print(secrets)
-    
-    # Copy data from APIs to ElasticSearch cluster:
-    for api_name in secrets.keys():
+    #print(secrets)
 
-        api_details = secrets[api_name]
+    # 1. Get root api parameters:
+    plussa_api_url = secrets["plussa"]["API urls"]["plussa-root"]
+    plussa_api_key = secrets["plussa"]["API keys"]["plussa"]
 
-        if 'API keys' in api_details:
-            access_token = api_details['API keys'][api_name]
-        else:
-            access_token = ""
-        
-        if 'API urls' in api_details:
-            for api_name in api_details['API urls'].keys():
-                url = api_details['API urls'][api_name]
-                copy_api_point_to_index(url, access_token, api_name)
+    # 2. Get Plussa API root contents:
+    plussa_root_reply = fetch_api_to_ES(plussa_api_url, plussa_api_key, "plussa-root", 0)
+    if plussa_root_reply == False:
+        return False
 
-    #search_elasticsearch('{"query": {"match": {"message": "login successful"}}}')
+    # Get course list api url:
+    plussa_courselist_api_url = plussa_root_reply["courses"]
+
+    # 3. Get list of course instances in Plussa:
+    plussa_courselist_reply = fetch_api_to_ES(plussa_courselist_api_url, plussa_api_key, "plussa-course-list", 0)
+    if plussa_courselist_reply == False:
+        return False
+
+    # 4. Fetch data for courses:
+    for course_instance in plussa_courselist_reply["results"]:
+
+        # Only parse instances of the course: "Programming 2: Basics"
+        if "Ohjelmointi 2:" in course_instance["name"]:
+
+            # Get course API url and id:
+            course_instance_url = course_instance["url"]
+            course_id = course_instance["id"]
+
+            # 5. Get course details from Plussa Course Instance API:
+            course_details_reply = fetch_api_to_ES(course_instance_url, plussa_api_key, "plussa-course-{:d}".format(course_id), 0)
+            if course_details_reply == False:
+                return False
+
+            # Get exercise list and student list API urls:
+            course_exercises_url = course_details_reply["exercises"]
+            
+            # 6. Get exercise list details from Plussa API:
+            exercise_list_reply = fetch_api_to_ES(course_exercises_url, plussa_api_key, "plussa-course-{:d}-exercises".format(course_id), 0)
+            if exercise_list_reply == False:
+                return False
+
+            next_url = course_details_reply["students"]
+            page_id = 0
+            while isinstance(next_url, str):
+                print("next_url is:", next_url)
+                next_url = write_students(next_url, plussa_api_key, course_id, course_instance, page_id)
+                page_id += 1
 
 
 main()
