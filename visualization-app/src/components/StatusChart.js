@@ -57,16 +57,18 @@ const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max, h
   const mediumExpectedColor = "#000073"
   const minimumExpectedColor = "#000073"
 
+  const barWidth = 10
+
   return (
     <div className="intended">
       <ComposedChart width={chartWidth} height={chartHeight} data={data}
                      margin={{ top: 10, right: 15, left: 25, bottom: 25 }}
-                     barGap={-20}>
+                     barGap={-barWidth}>
         
         <XAxis dataKey="id"
                padding={{left: 0, right: 0}}
                label={{ value: axisNames[0], position: 'bottom' }}/>
-        <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}
+        <YAxis label={{ value: axisNames[1], position: 'left', offset: 0 }}
                type="number"
                domain={['dataMin', 'dataMax']}
                ticks={ticks}/>
@@ -77,25 +79,25 @@ const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max, h
 
         <Area type="monotone" dataKey="totPts" fill="#c3c3c3" stroke="#c3c3c3" />
         
-        <Bar dataKey={dataKeys["maxPoints"]} barSize={20} fill="white" stroke="black">{
+        <Bar dataKey={dataKeys["maxPoints"]} barSize={barWidth} fill="white" stroke="black">{
           data !== undefined ?
             data.map((entry, index) => 
               <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
             ""}
         </Bar>
-        <Bar dataKey={dataKeys["week"]} barSize={20} fill="#4cce4c" onClick={() => handleClick()}>{
+        <Bar dataKey={dataKeys["week"]} barSize={barWidth} fill="#4cce4c" onClick={() => handleClick()}>{
           data !== undefined ?
             data.map((entry, index) => 
               <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
             ""}
         </Bar>
-        <Bar dataKey={dataKeys["totalPoints"]} barSize={20} fill="green" onClick={() => handleClick()}>{
+        <Bar dataKey={dataKeys["totalPoints"]} barSize={barWidth} fill="green" onClick={() => handleClick()}>{
           data !== undefined ?
             data.map((entry, index) => 
               <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
             ""}
         </Bar>
-        <Bar dataKey={dataKeys["missed"]} barSize={20} fill="red" onClick={() => handleClick()}>{
+        <Bar dataKey={dataKeys["missed"]} barSize={barWidth} fill="red" onClick={() => handleClick()}>{
           data !== undefined ?
             data.map((entry, index) => 
               <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :

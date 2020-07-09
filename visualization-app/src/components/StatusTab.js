@@ -48,10 +48,10 @@ const StudentDetailView = ({student}) => {
 
 const StatusTab = () => {
 
-  const [ progressData, setProgressData ] = useState([{"1": 0}])
+  const [ progressData, setProgressData ] = useState([{"data": []}])
   const [ max, setMax ] = useState(0)
 
-  const [ weeks, setWeeks ] = useState([])
+  const [ weeks, setWeeks ] = useState(["1"])
   const [ selectedWeek, setSelectedWeek ] = useState("1")
 
   const [ modes, setModes ] = useState([])
@@ -80,17 +80,17 @@ const StatusTab = () => {
   
   useEffect(
     () => {
-      const pData = dataService.getProgressData()
-      setProgressData(pData)
-      console.log(pData);
-
-      const weeks = dataService.getWeeks()
-      const selected = weeks[weeks.length-1]
-
-      setWeeks(weeks)
-      setSelectedWeek(selected)
-
-      setMax(pData[selected-1]["data"][0].maxPts)
+      dataService
+        .getData()
+        .then(response => {
+          const pData = dataService.getProgressData(response)
+          setProgressData(pData)
+          const weeks = pData.map(week => week.week)
+          const selected = weeks[weeks.length-1]
+          setWeeks(weeks)
+          setSelectedWeek(selected)
+          setMax((pData[selected-1] !== undefined) ? pData[selected-1]["data"][0].maxPts : 0)
+        })
 
       setModes(["points", "exercises", "commits"])
       setSelectedMode("points")
