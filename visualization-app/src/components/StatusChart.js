@@ -1,5 +1,5 @@
 import React from 'react'
-import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Line, Cell } from 'recharts';
+import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Line, Cell, ReferenceLine } from 'recharts';
 
 const CustomTooltip = (props) => {
 
@@ -30,39 +30,65 @@ const CustomTooltip = (props) => {
 }
 
 const CustomLabel = (props) => {
-
-  const newDy = (props.pos === "above") ? "-0.5em" : "1em"
-  
-  if (props.index === 0) {
-    return (
-      <text x={props.x} y={props.y}
-            dy={newDy}
-            fill={props.color}
-            fontSize={10}
-            textAnchor="right">
-        {props.title}
-      </text>
-    )
-  }
-  return <></>
+  return (
+    <text style={{textAnchor: "end"}}
+          x={props.viewBox.x + props.chartWidth - 105}
+          y={props.viewBox.y}
+          fill={props.color}
+          dy={"0.4em"}
+          fontSize={12}
+          textAnchor="left">
+      {props.title}
+    </text>
+  )
 }
 
-const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max, handleClick }) => {
+const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, max, handleClick }) => {
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
   ticks.push(max)
 
-  const averageColor = "#ff7300"
+  const averageColor = "black"
   const mediumExpectedColor = "#000073"
   const minimumExpectedColor = "#000073"
 
   const barWidth = 10
 
+  if (data === undefined || commonData === undefined) {
+    console.log("Either student data or common student data is undefined.")
+    console.log("data:", data)
+    console.log("commond data:", commonData)
+    return (
+      <div className="intended">No data to display.</div>
+    )
+  }
+
+  const mapping = [{
+    key: dataKeys["maxPoints"],
+    color: "white",
+    stroke: "darkgrey"
+  },
+  {
+    key: dataKeys["week"],
+    color: "#4cce4c",
+    stroke: "#4cce4c"
+  },
+  {
+    key: dataKeys["totalPoints"],
+    color: "green",
+    stroke: "green"
+  },
+  {
+    key: dataKeys["missed"],
+    color: "red",
+    stroke: "red"
+  }]
+
   return (
     <div className="intended">
       <ComposedChart width={chartWidth} height={chartHeight} data={data}
-                     margin={{ top: 10, right: 15, left: 25, bottom: 25 }}
+                     margin={{ top: 10, right: 20, left: 45, bottom: 25 }}
                      barGap={-barWidth}>
         
         <XAxis dataKey="id"
@@ -78,53 +104,42 @@ const MultiChart = ({ chartWidth, chartHeight, data, axisNames, dataKeys, max, h
         <CartesianGrid stroke="#f5f5f5" />
 
         <Area type="monotone" dataKey="totPts" fill="#c3c3c3" stroke="#c3c3c3" />
-        
-        <Bar dataKey={dataKeys["maxPoints"]} barSize={barWidth} fill="white" stroke="black">{
-          data !== undefined ?
-            data.map((entry, index) => 
-              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
-            ""}
-        </Bar>
-        <Bar dataKey={dataKeys["week"]} barSize={barWidth} fill="#4cce4c" onClick={() => handleClick()}>{
-          data !== undefined ?
-            data.map((entry, index) => 
-              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
-            ""}
-        </Bar>
-        <Bar dataKey={dataKeys["totalPoints"]} barSize={barWidth} fill="green" onClick={() => handleClick()}>{
-          data !== undefined ?
-            data.map((entry, index) => 
-              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
-            ""}
-        </Bar>
-        <Bar dataKey={dataKeys["missed"]} barSize={barWidth} fill="red" onClick={() => handleClick()}>{
-          data !== undefined ?
-            data.map((entry, index) => 
-              <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
-            ""}
-        </Bar>
 
-        <Line type="monotone"
-              dataKey={dataKeys["average"]}
-              stroke={averageColor}
-              dot={false}
-              label={<CustomLabel title={"Average"}
-                                  color={averageColor}
-                                  pos={"above"}/>}/>
-        <Line type="monotone"
-              dataKey={dataKeys["expectedMinimum"]}
-              stroke={minimumExpectedColor}
-              dot={false}
-              label={<CustomLabel title={"Expected Minimum"}
-                                  color={minimumExpectedColor}
-                                  pos={"below"}/>}/>
-        <Line type="monotone"
-              dataKey={dataKeys["expectedMedium"]}
-              stroke={mediumExpectedColor}
-              dot={false}
-              label={<CustomLabel title={"Expected Medium"}
-                                  color={mediumExpectedColor}
-                                  pos={"above"}/>}/>
+        {mapping.map(obj => 
+          <Bar key={obj.key} dataKey={obj.key} barSize={barWidth} fill={obj.color} stroke={obj.stroke} >{
+            data !== undefined ?
+              data.map((entry, index) => 
+                <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
+              ""}
+          </Bar>
+        )}
+
+        <ReferenceLine y={commonData[dataKeys["average"]]}
+                       stroke={averageColor}
+                       label={<CustomLabel
+                                title="Avg"
+                                color={averageColor}
+                                pos={"above"}
+                                chartWidth={chartWidth}/>}
+                       strokeDasharray="2 4" />
+
+        <ReferenceLine y={commonData[dataKeys["expectedMedium"]]}
+                       stroke={mediumExpectedColor}
+                       label={<CustomLabel
+                                title={"Mid"}
+                                color={mediumExpectedColor}
+                                pos={"above"}
+                                chartWidth={chartWidth}/>}
+                       strokeDasharray="3 3" />
+
+        <ReferenceLine y={commonData[dataKeys["expectedMinimum"]]}
+                       stroke={minimumExpectedColor}
+                       label={<CustomLabel
+                                title={"Min"}
+                                color={minimumExpectedColor}
+                                pos={"below"}
+                                chartWidth={chartWidth}/>}
+                       strokeDasharray="3 3" />
 
       </ComposedChart>
     </div>

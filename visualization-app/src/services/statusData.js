@@ -1,5 +1,4 @@
 import axios from 'axios'
-import helpers from './helpers'
 const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
 
 const getWeeklyPoints = (modules, mapping) => {
@@ -73,13 +72,10 @@ const getData = () => {
               name: result.username,
               id: result.student_id,
               weeklyPoints: weeklies,
-              maxPts: 1060,  // TODO: get value for this
+              maxPts: 0,  // TODO: get value for this
               weeklyMaxes: weeklyMaxes,
-              cumulativeMaxes: [30, 130, 240, 335, 395, 485, 540, 610, 700, 740, 795, 915, 1020, 1050, 1050, 1060], // TODO: get real value for this
-              cumulativePoints: {},
-              weeklyAvgs: [],
-              weeklyMins: [],
-              weeklyMids: []
+              cumulativeMaxes: [],
+              cumulativePoints: {}
             }
             results.push(formattedResult)
           }
@@ -120,18 +116,26 @@ const calcCumulativePoints = (data) => {
   return data
 }
 
-const getStudentIds = (data) => {
-  // const request = axios.get(baseUrl)
-  // return request.then(response => response.data)
-  return data.map(student => student.id)
+const calcCumulatives = (pointArray) => {
+  return Object.keys(pointArray).map(key => {
+    return pointArray.slice(0, key).reduce((sum, val) => {
+      return sum + val
+    }, 0)
+  })
 }
 
 const calcAvgs = (data) => {
   const weeks = getWeeks(data)
   const avgs = new Array(weeks.length).fill(0)
-  const midExpected = [30, 100, 77, 83, 37, 70, 45, 41, 74, 40, 40, 120, 5, 30, 0, 0]
-  const minExpected = [30, 100, 30, 40, 30, 80,  0, 30, 36, 25,  0,   0, 0, 30, 0, 0]
+  // TODO: get real values for the expecteds:
+  const midExpected = [30, 100, 77, 83, 37, 70, 45, 41, 74, 40, 40, 120, 5, 30, 0, 0] // From history data
+  const minExpected = [30, 100, 30, 40, 30, 80,  0, 30, 36, 25,  0,   0, 0, 30, 0, 0] // From history data
   
+  // Calculate weekly cumulative maxes from weeklyMaxes:
+  const cumulativeMaxes = (data.length > 0) ? 
+    calcCumulatives(data[0].weeklyMaxes.concat(0)).slice(1, data[0].weeklyMaxes.length+1)
+    : []
+
   // Calculate weekly averages:
   weeks.forEach(week => {
     data.forEach(student => {
@@ -140,17 +144,21 @@ const calcAvgs = (data) => {
     avgs[week-1] = Math.round(avgs[week-1] / data.length)
   })
 
+  const commonData = {
+    cumulativeAvgs: calcCumulatives(avgs),
+    cumulativeMinExpected: calcCumulatives(minExpected),
+    cumulativeMidExpected: calcCumulatives(midExpected)
+  }
+
   data.forEach(student => {
     student.weeklyAvgs = avgs
     student.weeklyMins = minExpected
     student.weeklyMids = midExpected
 
-    student.cumulativeAvgs = helpers.calcCumulatives(avgs)
-    student.cumulativeMinExpected = helpers.calcCumulatives(minExpected)
-    student.cumulativeMidExpected = helpers.calcCumulatives(midExpected)
+    student.cumulativeMaxes = cumulativeMaxes
   })
   
-  return data
+  return [data, commonData]
 }
 
 const dataByWeeks = (data) => {
@@ -162,9 +170,6 @@ const dataByWeeks = (data) => {
         totPts: student.cumulativeMaxes[week-1] - student.weeklyMaxes[week-1],
         week: student.cumulativeMaxes[week-1] - student.weeklyMaxes[week-1] + student.weeklyPoints[week],
         missed: (student.cumulativeMaxes[week-2] || 0) - (student.cumulativePoints[week-1] || 0),
-        avg: student.cumulativeAvgs[week-1],
-        mid: student.cumulativeMidExpected[week-1],
-        min: student.cumulativeMinExpected[week-1],
         tooltipWeek: student.weeklyPoints[week],
         tooltipWeekTot: student.weeklyMaxes[week-1],
         tooltipCPts: student.cumulativePoints[week],
@@ -175,8 +180,9 @@ const dataByWeeks = (data) => {
   })
 }
 
-const getProgressData = (pData) => {
-  return dataByWeeks(calcAvgs(calcCumulativePoints(pData)))
+const formatProgressData = (pData) => {
+  const [data, commonData] = calcAvgs(calcCumulativePoints(pData))
+  return [dataByWeeks(data), commonData]
 }
 
-export default { getStudentIds, getWeeks, getProgressData, getData };
+export default { formatProgressData, getData };

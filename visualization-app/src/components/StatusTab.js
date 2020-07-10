@@ -48,11 +48,14 @@ const StudentDetailView = ({student}) => {
 
 const StatusTab = () => {
 
-  const [ progressData, setProgressData ] = useState([{"data": []}])
+  const [ progressData, setProgressData ] = useState([])
+  const [ commonData, setCommonData ]  = useState([])
+  const [ commonDataToDisplay, setcommonDataToDisplay ] = useState({})
   const [ max, setMax ] = useState(0)
 
   const [ weeks, setWeeks ] = useState(["1"])
   const [ selectedWeek, setSelectedWeek ] = useState("1")
+  const [ weekData, setWeekData ] = useState([])
 
   const [ modes, setModes ] = useState([])
   const [ displayedModes, setdisplayedModes ] = useState([])
@@ -83,13 +86,27 @@ const StatusTab = () => {
       dataService
         .getData()
         .then(response => {
-          const pData = dataService.getProgressData(response)
-          setProgressData(pData)
+          const [pData, commons] = dataService.formatProgressData(response)
+          setCommonData(commons)
+
           const weeks = pData.map(week => week.week)
           const selected = weeks[weeks.length-1]
+          const weekIndex = selected-1
           setWeeks(weeks)
           setSelectedWeek(selected)
-          setMax((pData[selected-1] !== undefined) ? pData[selected-1]["data"][0].maxPts : 0)
+
+          setcommonDataToDisplay({
+            'avg': commons.cumulativeAvgs[weekIndex],
+            'mid': commons.cumulativeMidExpected[weekIndex],
+            'min': commons.cumulativeMinExpected[weekIndex]
+          })
+
+          if (pData[weekIndex] !== undefined) {
+            setMax(pData[weekIndex]["data"][0].maxPts)
+            setWeekData(pData[weekIndex]["data"])
+          }
+
+          setProgressData(pData)
         })
 
       setModes(["points", "exercises", "commits"])
@@ -101,7 +118,6 @@ const StatusTab = () => {
   )
 
   const handleStudentClick = (data, index) => {
-    
     if (data !== undefined) {
       const newSelected = data.id
       setSelectedStudent(newSelected)
@@ -114,27 +130,38 @@ const StatusTab = () => {
     setdisplayedModes(modes.filter(name => name !== newMode))
   }
 
-  const handleWeekSwitchClick = (newWeek) => {
+  const handleWeekSwitch = (newWeek) => {
     setSelectedWeek(newWeek)
-    setMax(progressData[newWeek-1]["data"][0].maxPts)
+
+    if (progressData[newWeek-1] !== undefined) {
+      setMax(progressData[newWeek-1]["data"][0].maxPts)
+      setWeekData(progressData[newWeek-1]["data"])
+
+      setcommonDataToDisplay({
+        'avg': commonData.cumulativeAvgs[newWeek-1],
+        'mid': commonData.cumulativeMidExpected[newWeek-1],
+        'min': commonData.cumulativeMinExpected[newWeek-1]
+      })
+    }
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
     
-    const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
+    // Find reference lines:
+    const lines = document.querySelectorAll("g.recharts-layer.recharts-reference-line")
     
+    // Toggle line visibility:
     lines.forEach(node => {
+    
+      const textContent = node.firstChild.nextSibling.textContent
 
-      const textContent = node.nextSibling.firstChild.textContent
-
-      // Toggle line visibility:
-      if (targetLine === "Expected" && textContent.includes("Expected")) {
+      if (targetLine === "Expected" && !textContent.includes("Av")) {
         setShowExpected(!showExpected)
-        node.parentNode.style.display = showExpected ? "none" : ""
+        node.style.display = showExpected ? "none" : ""
       }
-      else if (targetLine === "Average" && textContent === "Average") {
+      else if (targetLine === "Average" && textContent.includes("Av")) {
         setShowAvg(!showAvg)
-        node.parentNode.style.display = showAvg ? "none" : ""
+        node.style.display = showAvg ? "none" : ""
       }
     })
   }
@@ -148,12 +175,12 @@ const StatusTab = () => {
                   showableLines={showableLines}
                   handleToggleRefLineVisibilityClick={handleToggleRefLineVisibilityClick}
                   showAvg={showAvg} showExpected={showExpected}
-                  handleWeekClick={handleWeekSwitchClick} weeks={weeks} selectedWeek={selectedWeek} >
+                  handleWeekClick={handleWeekSwitch} weeks={weeks} selectedWeek={selectedWeek} >
         </Controls>
       </div>
 
       <MultiChart chartWidth={chartWidth} chartHeight={chartHeight}
-                  data={progressData[selectedWeek-1]["data"]} dataKeys={dataKeys}
+                  data={weekData} commonData={commonDataToDisplay} dataKeys={dataKeys}
                   axisNames={axisNames} max={max}
                   handleClick={handleStudentClick}>
       </MultiChart>
