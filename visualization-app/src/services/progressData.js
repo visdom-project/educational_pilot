@@ -1,132 +1,146 @@
-//import axios from 'axios'
-import helpers from './helpers'
-//const baseUrl = 'TODO'
+import axios from 'axios'
+const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
 
-const progressData = [
-  {
-    name: 'Matti Meikäläinen',
-    id: "123456",
-    weeklyPoints: {1: 30, 2: 90, 3: 55, 4: 90, 5: 40, 6: 55, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    maxPts: 695,
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  },
-  {
-    name: 'Liisa Leviä',
-    id: "234567",
-    weeklyPoints: {1: 30, 2: 50, 3: 30, 4: 55, 5: 40, 6: 50, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    maxPts: 695,
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  },
-  {
-    name: 'Teemu Teekkari',
-    id: "345678",
-    weeklyPoints: {1: 0, 2: 10, 3: 20, 4: 15, 5: 50, 6: 30, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    maxPts: 695,
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  },
-  {
-    name: 'Tuija Tarmokas',
-    id: "456789",
-    weeklyPoints: {1: 20, 2: 20, 3: 30, 4: 50, 5: 20, 6: 40, 7: 0, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    maxPts: 695,
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  },
-  {
-    name: "Jaska Jokunen",
-    id: "567890",
-    maxPts: 695,
-    weeklyPoints: {1: 20, 2: 80, 3: 68, 4: 41, 5: 50, 6: 10, 7: 6, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  },
-  {
-    id: "678901",
-    maxPts: 695,
-    weeklyPoints: {1: 30, 2: 100, 3: 110, 4: 41, 5: 0, 6: 72, 7: 5, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  },
-  {
-    id: "789012",
-    maxPts: 695,
-    weeklyPoints: {1: 30, 2: 100, 3: 110, 4: 30, 5: 60, 6: 90, 7: 5, 8: 0, 9: 0, 10: 0, 11: 0, 12: 0, 13: 0, 14: 0, 15: 0, 16: 0},
-    weeklyMaxes: [30, 100, 110, 95, 60, 90, 55, 70, 90, 40, 55, 120, 105, 30, 0, 10],
-    cumulativePoints: {},
-    weeklyAvgs: [],
-    weeklyMins: [],
-    weeklyMids: []
-  }
-]
+const getModuleMapping = (modules) => {
 
-const calcWeeks = (data) => {
-  if (data.length > 0 && data[0].weeklyPoints !== undefined) {
-    return [...Object.keys(data[0].weeklyPoints)]
+  const corrects = []
+  modules.forEach(module => {
+    if (module.max_points > 0 || module.id === 570) { // Hard coding: ID 570 is a special case: git-course-module that has no points in Programming 2.
+      let module_number = module.name.slice(0, 2)
+      if (module_number[1] === ".") {
+        module_number = module_number[0]
+      }
+      const newModule = {...module, week: module_number}
+      corrects.push(newModule)
+    }
+  })
+
+  const mapped = new Array(corrects.length).fill("")
+  corrects.forEach(module => {
+    mapped[parseInt(module.week)-1] = module.id
+  })
+
+  return mapped
+}
+
+const getPointsForWeek = (data, moduleId) => {
+
+  const correct_week = data.points.modules.find( module => module.id === moduleId )
+
+  if (correct_week !== undefined) {
+    return correct_week.points
   }
-  else {
-    console.log("progressData.js::calcWeeks(): data does not contain non-empty field: weeklyPoints!");
+  console.log("progressData.js::getPointsForWeek(): Could not find points for a student!");
+  return 0
+}
+
+const calcWeeklyAvgs = (weeklyPointData) => {
+
+  weeklyPointData.forEach(week => {
+
+    let len = 0
+    const pointSum = Object.keys(week).reduce((sum, student) => {
+      len += 1
+      return sum += week[student]
+    }, 0)
+
+    // Avg calculation takes into account that week-field is calculated in the point sum
+    week.weeklyAvgs = (pointSum - week.week) / (len - 1)
+  })
+
+  return weeklyPointData
+}
+
+const calcCumulatives = (pointArray) => {
+  return Object.keys(pointArray).map(key => {
+    return pointArray.slice(0, key).reduce((sum, val) => {
+      return sum + val
+    }, 0)
+  })
+}
+
+const addCumulativePointData = (data, correctModules) => {
+  data.data.hits.hits.forEach(hit => {
+    hit._source.results.forEach(result => {
+      if (!result.username.includes("redacted")) {
+
+        // Remove modules that have uninteresting data:
+        const newModules = []
+        result.points.modules.forEach(module => {
+
+          const foundModule = correctModules.find( cmp => cmp === module.id)
+
+          if (foundModule !== undefined) {
+            newModules.push(module)
+          }
+        })
+        result.modules = newModules
+
+        // Calculate cumulative points for student into a list:
+        result.cumulativePoints = calcCumulatives(newModules.map(module => module.points))
+      }
+    })
+  })
+}
+
+const getData = () => {
+
+  const request = axios
+    .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
+    .then((response) => {
+
+      const first_non_empty = response.data.hits.hits[0]._source.results.find(result => !result.student_id.includes("redacted"))
+      const moduleMapping = getModuleMapping(first_non_empty.points.modules)
+
+      addCumulativePointData(response, moduleMapping) // Data preprocessing: add cumulative point data, remove excess modules
+
+      const results = []
+      const resultsCumulative = []
+      
+      const weeks1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] // TODO
+      const weeks = weeks1.map(week => { return { week: week } })
+
+      weeks.forEach(week => {
+        const weekCumulatively = {week: week.week}
+
+        response.data.hits.hits.forEach(hit => {
+          hit._source.results.forEach(result => {
+            if (!result.username.includes("redacted")) {
+
+              week[result.student_id] = getPointsForWeek(result, moduleMapping[week.week-1])
+              weekCumulatively[result.student_id] = result.cumulativePoints[week.week-1]
+            }
+          })
+        })
+        results.push(week)
+        resultsCumulative.push(weekCumulatively)
+      })
+
+      return [calcWeeklyAvgs(results), calcWeeklyAvgs(resultsCumulative)]
+    })
+    .catch(someError => [])
+
+  return request
+}
+
+const getStudentIds = (data) => {
+  
+  if (data === undefined || data[0] === undefined) {
+    console.log("progressData.js::getStudentIds(): data is undefined. Returning empty student list.");
     return []
   }
-}
+  const list = Object.keys(data[0]).map(key => key)   // Note/TODO; Contains excess keys: "week" and "weeklyAvgs"
 
-const calcCumulativePoints = (data) => {
-  if (data.length > 0 && data[0].weeklyPoints !== undefined) {
-    
-    // Calculate weekly cumulative sum of points for each student:
-    data.forEach(student => {
-      let sum = 0
-      Object.keys(student.weeklyPoints).forEach(week => {
-        sum += student.weeklyPoints[week]
-        student.cumulativePoints[week] = sum
-      })
-    });
+  const toRemove =  ["week", "weeklyAvgs"]
+  toRemove.forEach(item => {
+    const indexOfItem = list.indexOf(item)
+    if (indexOfItem > -1) {
+      list[indexOfItem] = list[list.length -1]
+      list.pop()
+    }
+  })
   
-  } else { console.log("progressData.js::calcCumulativePoints(): data does not contain non-empty field: weeklyPoints!");}
-
-  return data
+  return list
 }
 
-const getStudentIds = () => {
-  // const request = axios.get(baseUrl)
-  // return request.then(response => response.data)
-  return progressData.map(student => student.id)
-}
-
-const getWeeklyProgressPoints = (avgDataKey) => {
-  const pointData = calcCumulativePoints(progressData)
-  const weeks = calcWeeks(pointData)
-  const ids = getStudentIds()
-
-  const [pointsByWeek, cumulativePointsByWeek] = helpers.pointsByWeek(pointData, weeks)
-
-  const weekAvgs = helpers.calculateWeeklyAvgs(pointsByWeek, ids)
-  const weekCumulativeAvgs = helpers.calculateWeeklyAvgs(cumulativePointsByWeek, ids)
-  
-  const catenatedpointsByWeek = helpers.catenateAvgsToPts(pointsByWeek, weekAvgs)
-  const catenatedCumulative = helpers.catenateAvgsToPts(cumulativePointsByWeek, weekCumulativeAvgs, avgDataKey)
-
-  return [catenatedpointsByWeek, catenatedCumulative]
-}
-
-export default { getStudentIds, getWeeklyProgressPoints };
+export default { getStudentIds, getData };

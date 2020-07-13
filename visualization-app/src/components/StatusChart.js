@@ -1,5 +1,5 @@
 import React from 'react'
-import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Line, Cell, ReferenceLine } from 'recharts';
+import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
 
 const CustomTooltip = (props) => {
 
