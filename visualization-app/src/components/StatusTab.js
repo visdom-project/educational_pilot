@@ -3,6 +3,7 @@ import dataService from '../services/statusData'
 import MultiChart from './StatusChart'
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
+import helpers from '../services/helpers'
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
@@ -106,7 +107,7 @@ const StatusTab = () => {
             setWeekData(pData[weekIndex]["data"])
           }
 
-          setProgressData(pData)
+          setProgressData(helpers.orderData(pData))
         })
 
       setModes(["points", "exercises", "commits"])

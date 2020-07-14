@@ -1,6 +1,8 @@
 import React from 'react'
 import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
 
+import '../stylesheets/studentbar.css'
+
 const CustomTooltip = (props) => {
 
   if (props.active) {
@@ -98,15 +100,13 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                type="number"
                domain={['dataMin', 'dataMax']}
                ticks={ticks}/>
-        
-        <Tooltip content={<CustomTooltip data={data}/>} />
 
         <CartesianGrid stroke="#f5f5f5" />
 
         <Area type="monotone" dataKey="totPts" fill="#c3c3c3" stroke="#c3c3c3" />
 
         {mapping.map(obj => 
-          <Bar key={obj.key} dataKey={obj.key} barSize={barWidth} fill={obj.color} stroke={obj.stroke} >{
+          <Bar className={"hoverable-bar"} key={obj.key} dataKey={obj.key} barSize={barWidth} fill={obj.color} stroke={obj.stroke} >{
             data !== undefined ?
               data.map((entry, index) => 
                 <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
