@@ -22,18 +22,18 @@ TODO: muokkaa elasticsearch clusteria niin, että data tallennetaan persistent m
 2. Write secrets to a configuration file called 'secrets':
 ```touch secrets```
 Write the following lines in the file and get tokens from services:
-```GITLAB_API_URL = https://course-gitlab.tuni.fi/api/v4/projects```
-```GITLAB_API_KEY = ```
-```#PLUSSA_API_URL = https://plus.tuni.fi/api/v2/courses/40/```
-```#PLUSSA_API_KEY = ```
+```#GITLAB_API_URL = https://course-gitlab.tuni.fi/api/v4/projects```
+```#GITLAB_API_KEY = ```
+```PLUSSA_API_URL = https://plus.tuni.fi/api/v2/```
+```PLUSSA_API_KEY = ```
 
 3.  Deploy data fetcher service:
 ```docker build . -t datafetcher```
-```docker run -it --rm datafetcher```
+```docker run -it --rm --network host datafetcher```
 Use ctrl + p && ctrl + q to detach from docker tty while leaving process alive.
 
 4. Deploy the frontend service:
 ```cd visualization-app```
-```sudo docker build . -t visuapp```
+```docker build . -t visuapp```
 ```docker run -it --rm -p 3000:3000 visuapp```
 Use ctrl + p && ctrl + q to detach from docker tty while leaving process alive.
