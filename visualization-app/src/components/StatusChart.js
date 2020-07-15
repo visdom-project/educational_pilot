@@ -1,35 +1,6 @@
 import React from 'react'
-import { ComposedChart, XAxis, YAxis, Tooltip, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
-
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
 import '../stylesheets/studentbar.css'
-
-const CustomTooltip = (props) => {
-
-  if (props.active) {
-
-    const tooltipState = { weekPts: -99, weekTot: -99, cumulativePts: -99, maxPts: -99 }
-
-    props.data.forEach(element => {
-      if (element.id===props.label) {
-        tooltipState.weekPts = element.tooltipWeek
-        tooltipState.weekTot = element.tooltipWeekTot
-        tooltipState.cumulativePts = element.tooltipCPts
-        tooltipState.maxPts = element.tooltipCPtsTot
-      }
-    })
-
-    return (
-      <div style={{background: "white", padding: "10px", border: "1px solid darkgrey", borderRadius: "5px"}}>
-        <strong>Id: {props.label}</strong>
-        <br></br>
-        Week: {tooltipState.weekPts}/{tooltipState.weekTot} pts
-        <br></br>
-        Total: {tooltipState.cumulativePts}/{tooltipState.maxPts} pts
-      </div>
-    )
-  }
-  return <></>
-}
 
 const CustomLabel = (props) => {
   return (
@@ -45,7 +16,7 @@ const CustomLabel = (props) => {
   )
 }
 
-const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, max, handleClick }) => {
+const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, commonKeys, max, handleClick }) => {
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
@@ -67,7 +38,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
   }
 
   const mapping = [{
-    key: dataKeys["maxPoints"],
+    key: dataKeys["maxPts"],
     color: "white",
     stroke: "darkgrey"
   },
@@ -101,12 +72,10 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                domain={['dataMin', 'dataMax']}
                ticks={ticks}/>
 
-        <CartesianGrid stroke="#f5f5f5" />
+        <Area type="monotone" dataKey={dataKeys.totalPoints} fill="#c3c3c3" stroke="#c3c3c3" />
 
-        <Area type="monotone" dataKey="totPts" fill="#c3c3c3" stroke="#c3c3c3" />
-
-        {mapping.map(obj => 
-          <Bar className={"hoverable-bar"} key={obj.key} dataKey={obj.key} barSize={barWidth} fill={obj.color} stroke={obj.stroke} >{
+        {mapping.map(bar => 
+          <Bar className={"hoverable-bar"} key={bar.key} dataKey={bar.key} barSize={barWidth} fill={bar.color} stroke={bar.stroke} >{
             data !== undefined ?
               data.map((entry, index) => 
                 <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
@@ -114,7 +83,9 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
           </Bar>
         )}
 
-        <ReferenceLine y={commonData[dataKeys["average"]]}
+        <CartesianGrid stroke="#808e9625" vertical={false}/>
+
+        <ReferenceLine y={commonData[commonKeys.average]}
                        stroke={averageColor}
                        label={<CustomLabel
                                 title="Avg"
@@ -123,7 +94,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                                 chartWidth={chartWidth}/>}
                        strokeDasharray="2 4" />
 
-        <ReferenceLine y={commonData[dataKeys["expectedMedium"]]}
+        <ReferenceLine y={commonData[commonKeys.expectedMedium]}
                        stroke={mediumExpectedColor}
                        label={<CustomLabel
                                 title={"Mid"}
@@ -132,7 +103,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                                 chartWidth={chartWidth}/>}
                        strokeDasharray="3 3" />
 
-        <ReferenceLine y={commonData[dataKeys["expectedMinimum"]]}
+        <ReferenceLine y={commonData[commonKeys.expectedMinimum]}
                        stroke={minimumExpectedColor}
                        label={<CustomLabel
                                 title={"Min"}

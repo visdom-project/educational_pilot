@@ -3,7 +3,6 @@ import dataService from '../services/statusData'
 import MultiChart from './StatusChart'
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
-import helpers from '../services/helpers'
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
@@ -58,27 +57,47 @@ const StatusTab = () => {
   const [ selectedWeek, setSelectedWeek ] = useState("1")
   const [ weekData, setWeekData ] = useState([])
 
-  const [ modes, setModes ] = useState([])
-  const [ displayedModes, setdisplayedModes ] = useState([])
-  const [ selectedMode, setSelectedMode ] = useState("")
+  const modes = ["points", "exercises", "commits"]
+  const [ displayedModes, setdisplayedModes ] = useState(["exercises", "commits"])
+  const [ selectedMode, setSelectedMode ] = useState("points")
 
-  const [ showableLines, setShowableLines ] = useState([])
+  const pointDataKeys = {
+    studentId: "id",
+    maxPts: "maxPts",
+    week: "week",
+    totalPoints: "totPts",
+    missed: "missed",
+
+    cumulativeAvgs: 'cumulativeAvgs',
+    cumulativeMidExpected: 'cumulativeMidExpected',
+    cumulativeMinExpected: 'cumulativeMinExpected'
+  }
+  const exerciseDataKeys = {
+    studentId: "id",
+    maxPts: "maxExer",
+    week: "weekExer",
+    totalPoints: "totExer",
+    missed: "missedExer",
+    
+    cumulativeAvgs: 'cumulativeAvgsExercises',
+    cumulativeMidExpected: 'cumulativeMidExpectedExercises',
+    cumulativeMinExpected: 'cumulativeMinExpectedExercises'
+  }
+  const [ dataKeys, setDataKeys ] = useState(pointDataKeys)
+  const commonKeys = { average: 'avg', expectedMinimum: 'min', expectedMedium: 'mid' }
+
+  const showableLines = ["Average", "Expected"]
   const [ showAvg, setShowAvg ] = useState(true)
   const [ showExpected, setShowExpected ] = useState(true)
 
   const [ selectedStudent, setSelectedStudent ] = useState("")
 
-  const axisNames = ['Students', 'Points']
-  const dataKeys = {
-    studentId: "id",
-    maxPoints: "maxPts",
-    week: "week",
-    totalPoints: "totPts",
-    missed: "missed",
-    average: 'avg',
-    expectedMinimum: 'min',
-    expectedMedium: 'mid'
+  const axisNames = {
+    "points": ['Students', 'Points'],
+    "exercises": ['Students', 'Exercises'],
+    "commits": ['Students', 'Commits']
   }
+  
   const chartWidth = document.documentElement.clientWidth*0.9
   const chartHeight = document.documentElement.clientHeight*0.5
   
@@ -87,34 +106,16 @@ const StatusTab = () => {
       dataService
         .getData()
         .then(response => {
-          const [pData, commons] = dataService.formatProgressData(response)
+          const [pData, commons] = response
+
+          // Fetch needed data:
+          setProgressData(pData)
           setCommonData(commons)
+          setWeeks(pData.map(week => week.week))
 
-          const weeks = pData.map(week => week.week)
-          const selected = weeks[weeks.length-1]
-          const weekIndex = selected-1
-          setWeeks(weeks)
-          setSelectedWeek(selected)
-
-          setcommonDataToDisplay({
-            'avg': commons.cumulativeAvgs[weekIndex],
-            'mid': commons.cumulativeMidExpected[weekIndex],
-            'min': commons.cumulativeMinExpected[weekIndex]
-          })
-
-          if (pData[weekIndex] !== undefined) {
-            setMax(pData[weekIndex]["data"][0].maxPts)
-            setWeekData(pData[weekIndex]["data"])
-          }
-
-          setProgressData(helpers.orderData(pData))
+          // Set initial UI state:
+          handleWeekSwitch(1, pData, commons)
         })
-
-      setModes(["points", "exercises", "commits"])
-      setSelectedMode("points")
-      setdisplayedModes(["exercises", "commits"])
-      
-      setShowableLines(["Average", "Expected"])
     }, []
   )
 
@@ -129,19 +130,32 @@ const StatusTab = () => {
   const handleModeSwitchClick = (newMode) => {
     setSelectedMode(newMode)
     setdisplayedModes(modes.filter(name => name !== newMode))
+    
+    const newKeys = (newMode === "points") ? pointDataKeys : exerciseDataKeys
+    setDataKeys(newKeys)
+
+    handleWeekSwitch(undefined, undefined, undefined, newKeys)
   }
 
-  const handleWeekSwitch = (newWeek) => {
+  const handleWeekSwitch = (newWeek, data, commons, keys) => {
+    
+    if (newWeek === undefined) { newWeek = selectedWeek }
+    if (data === undefined) { data = progressData }
+    if (commons === undefined) { commons = commonData }
+    if (keys === undefined ) { keys = dataKeys}
+
     setSelectedWeek(newWeek)
 
-    if (progressData[newWeek-1] !== undefined) {
-      setMax(progressData[newWeek-1]["data"][0].maxPts)
-      setWeekData(progressData[newWeek-1]["data"])
+    if (data[newWeek-1] !== undefined) {
+
+      setMax(data[newWeek-1]["data"][0][keys.maxPts])
+      
+      setWeekData(data[newWeek-1]["data"])
 
       setcommonDataToDisplay({
-        'avg': commonData.cumulativeAvgs[newWeek-1],
-        'mid': commonData.cumulativeMidExpected[newWeek-1],
-        'min': commonData.cumulativeMinExpected[newWeek-1]
+        'avg': commons[keys.cumulativeAvgs][newWeek-1],
+        'mid': commons[keys.cumulativeMidExpected][newWeek-1],
+        'min': commons[keys.cumulativeMinExpected][newWeek-1]
       })
     }
   }
@@ -181,8 +195,9 @@ const StatusTab = () => {
       </div>
 
       <MultiChart chartWidth={chartWidth} chartHeight={chartHeight}
-                  data={weekData} commonData={commonDataToDisplay} dataKeys={dataKeys}
-                  axisNames={axisNames} max={max}
+                  data={weekData} dataKeys={dataKeys}
+                  commonData={commonDataToDisplay} commonKeys={commonKeys}
+                  axisNames={axisNames[selectedMode]} max={max}
                   handleClick={handleStudentClick}>
       </MultiChart>
 

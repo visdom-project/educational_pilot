@@ -1,31 +1,44 @@
 import axios from 'axios'
+import helpers from './helpers'
+
 const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
 
 const getWeeklyPoints = (modules, mapping) => {
   
   const weeklyPts = {}
   const weeklyMaxes = []
-
+  const weeklyExercises = {}
+  const weeklyExerciseMaxes = []
+  
   modules.forEach(module => {
-    if (mapping.indexOf(module.id) > -1) {
+
+    // Exclude all fake or ghost modules:
+    if (mapping.indexOf(module.id) > -1 || module.id === 570) { // Hard coding: ID 570 is a special case: git-course-module that has no points in Programming 2.
+      
+      // Deduct which week the module stands for:
       let week = module.name.slice(0, 2)
       if (week[1] === ".") {
         week = week.slice(0, 1)
       }
 
+      // How many points student has received this this module, aka. "week":
       weeklyPts[week] = module.points
 
-      // TODO: get rid of this:
-      if (week === "14") {
-        weeklyPts["15"] = 0
-        weeklyMaxes.push(0)
-      }
-
+      // How many points it is possible to receive from this module, aka. "week":
       weeklyMaxes.push(module.max_points)
+
+      // How many exercises student has submitted (NOTE: submission doesn't mean any kind of success!):
+      weeklyExercises[week] = module.exercises.reduce((sum, exercise) => {
+        sum += (exercise.submission_count > 0) ? 1 : 0
+        return sum
+      }, 0)
+
+      // How many exercises this module aka. "week" contains:
+      weeklyExerciseMaxes.push(module.exercises.length)
     }
   })
 
-  return [weeklyPts, weeklyMaxes]
+  return [weeklyPts, weeklyMaxes, weeklyExercises, weeklyExerciseMaxes]
 }
 
 const getModuleMapping = (modules) => {
@@ -61,28 +74,33 @@ const getData = () => {
       const moduleMapping = getModuleMapping(first_non_empty.points.modules)
 
       const results = []
+
       // Map student data into weeks:
       response.data.hits.hits.forEach(hit => {
         hit._source.results.forEach(result => {
           if (!result.username.includes("redacted")) {
 
-            const [weeklies, weeklyMaxes] = getWeeklyPoints(result.points.modules, moduleMapping)
+            const [weeklies, weeklyMaxes, weeklyExercises, weeklyExerciseMaxes] = getWeeklyPoints(result.points.modules, moduleMapping)
 
             const formattedResult = {
               name: result.username,
               id: result.student_id,
               weeklyPoints: weeklies,
-              maxPts: 0,  // TODO: get value for this
+              weeklyExercises: weeklyExercises,
+              maxPts: 0,
+              maxExer: 0,
               weeklyMaxes: weeklyMaxes,
+              weeklyExerciseMaxes: weeklyExerciseMaxes,
               cumulativeMaxes: [],
-              cumulativePoints: {}
+              cumulativeExerMaxes: [],
+              cumulativePoints: {},
+              cumulativeExercises: {}
             }
             results.push(formattedResult)
           }
         })
       })
-
-      return results
+      return formatProgressData(results)
     })
     .catch(someError => [])
 
@@ -99,19 +117,27 @@ const getWeeks = (data) => {
   }
 }
 
-const calcCumulativePoints = (data) => {
-  if (data.length > 0 && data[0].weeklyPoints !== undefined) {
-    
-    // Calculate weekly cumulative sum of points for each student:
+const calcCumulativeScoresForStudents = (data) => {
+  if (data.length > 0 && data[0].weeklyPoints !== undefined && data[0].weeklyExercises !== undefined) {
+
+    // Calculate cumulative points and exercises for each student:
     data.forEach(student => {
       let sum = 0
+      let exerciseSum = 0
+
       Object.keys(student.weeklyPoints).forEach(week => {
+
+        // Weekly points:
         sum += student.weeklyPoints[week]
         student.cumulativePoints[week] = sum
+
+        // Weekly submitted exercises:
+        exerciseSum += student.weeklyExercises[week]
+        student.cumulativeExercises[week] = exerciseSum
       })
     });
   
-  } else { console.log("progressData.js::calcCumulativePoints(): data does not contain non-empty field: weeklyPoints!");}
+  } else { console.log("progressData.js::calcCumulativePoints(): data does not contain non-empty field: weeklyPoints or weeklyExercises!");}
 
   return data
 }
@@ -124,30 +150,47 @@ const calcCumulatives = (pointArray) => {
   })
 }
 
-const calcAvgs = (data) => {
+const calcCommonData = (data) => {
+
   const weeks = getWeeks(data)
   const avgs = new Array(weeks.length).fill(0)
+  const exerciseAvgs = new Array(weeks.length).fill(0)
   // TODO: get real values for the expecteds:
   const midExpected = [30, 100, 77, 83, 37, 70, 45, 41, 74, 40, 40, 120, 5, 30, 0, 0] // From history data
   const minExpected = [30, 100, 30, 40, 30, 80,  0, 30, 36, 25,  0,   0, 0, 30, 0, 0] // From history data
+  const midExpectedExercises = [2, 3, 1, 2, 1, 2, 0, 1, 2, 1, 1, 1, 1, 1, 0, 1] // From history data
+  const minExpectedExercises = [2, 2, 1, 2, 1, 1, 0, 1, 1, 1, 1, 0, 1, 0, 0, 0] // From history data
   
-  // Calculate weekly cumulative maxes from weeklyMaxes:
+  // Calculate weekly cumulative maxes for points and exercises from weeklyMaxes and weeklyExerciseMaxes:
   const cumulativeMaxes = (data.length > 0) ? 
     calcCumulatives(data[0].weeklyMaxes.concat(0)).slice(1, data[0].weeklyMaxes.length+1)
     : []
+  
+  const cumulativeExerMaxes = (data.length > 0) ?
+  calcCumulatives(data[0].weeklyExerciseMaxes.concat(0)).slice(1, data[0].weeklyExerciseMaxes.length+1)
+  : []
+  
+  // TODO: Calculate cumulative points and submitted exercises for each student:
+  // TODO: Move calculating students' cumulative points here:
 
-  // Calculate weekly averages:
+  // Calculate weekly averages for points and exercises:
   weeks.forEach(week => {
     data.forEach(student => {
       avgs[week-1] += student.weeklyPoints[week]
+      exerciseAvgs[week-1] += student.weeklyExercises[week]
     })
     avgs[week-1] = Math.round(avgs[week-1] / data.length)
+    exerciseAvgs[week-1] = Math.round(exerciseAvgs[week-1] / data.length)
   })
 
   const commonData = {
     cumulativeAvgs: calcCumulatives(avgs),
     cumulativeMinExpected: calcCumulatives(minExpected),
-    cumulativeMidExpected: calcCumulatives(midExpected)
+    cumulativeMidExpected: calcCumulatives(midExpected),
+
+    cumulativeAvgsExercises: calcCumulatives(exerciseAvgs),
+    cumulativeMidExpectedExercises: calcCumulatives(minExpectedExercises),
+    cumulativeMinExpectedExercises: calcCumulatives(midExpectedExercises)
   }
 
   data.forEach(student => {
@@ -156,24 +199,38 @@ const calcAvgs = (data) => {
     student.weeklyMids = midExpected
 
     student.cumulativeMaxes = cumulativeMaxes
+    student.cumulativeExerMaxes = cumulativeExerMaxes
   })
   
   return [data, commonData]
 }
 
 const dataByWeeks = (data) => {
+
   return getWeeks(data).map(week => {
     const newData = data.map(student => {
+      const weekIndex = week-1
+
       return {
         id: student.id,
-        maxPts: student.cumulativeMaxes[week-1],
-        totPts: student.cumulativeMaxes[week-1] - student.weeklyMaxes[week-1],
-        week: student.cumulativeMaxes[week-1] - student.weeklyMaxes[week-1] + student.weeklyPoints[week],
-        missed: (student.cumulativeMaxes[week-2] || 0) - (student.cumulativePoints[week-1] || 0),
-        tooltipWeek: student.weeklyPoints[week],
-        tooltipWeekTot: student.weeklyMaxes[week-1],
-        tooltipCPts: student.cumulativePoints[week],
-        tooltipCPtsTot: student.cumulativeMaxes[week-1]
+
+        // How many points in total there has been available on the course:
+        maxPts: student.cumulativeMaxes[weekIndex],
+        // For displaying how many points the student has gained in total during the course:
+        totPts: student.cumulativeMaxes[weekIndex] - student.weeklyMaxes[weekIndex],
+        // For displaying how many points student received this week:
+        week: student.cumulativeMaxes[weekIndex] - student.weeklyMaxes[weekIndex] + student.weeklyPoints[week],
+        // How many points student has missed during the course:
+        missed: (student.cumulativeMaxes[weekIndex-1] || 0) - (student.cumulativePoints[weekIndex] || 0),
+        
+        // How many exercises in total there has been available on the course up until this week:
+        maxExer: student.cumulativeExerMaxes[weekIndex],
+        // For displaying how many exercises student has submitted in total during the course up until this week:
+        totExer: student.cumulativeExerMaxes[weekIndex] - student.weeklyExerciseMaxes[weekIndex],
+        // For displaying how many exercises student did this week:
+        weekExer: student.cumulativeExerMaxes[weekIndex] - student.weeklyExerciseMaxes[weekIndex] + student.weeklyExercises[week],
+        // How many exercises student has missed during the course up until this week:
+        missedExer: (student.cumulativeExerMaxes[weekIndex-1] || 0) - (student.cumulativeExercises[weekIndex] || 0),
       }
     })
     return {week: week, data: newData}
@@ -181,8 +238,8 @@ const dataByWeeks = (data) => {
 }
 
 const formatProgressData = (pData) => {
-  const [data, commonData] = calcAvgs(calcCumulativePoints(pData))
-  return [dataByWeeks(data), commonData]
+  const [data, commonData] = calcCommonData(calcCumulativeScoresForStudents(pData))
+  return [helpers.orderData(dataByWeeks(data)), commonData]
 }
 
 export default { formatProgressData, getData };
