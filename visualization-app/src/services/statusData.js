@@ -102,7 +102,7 @@ const getData = () => {
       })
       return formatProgressData(results)
     })
-    .catch(someError => [])
+    .catch(someError => [[], []])
 
   return request
 }

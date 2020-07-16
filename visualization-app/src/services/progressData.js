@@ -28,7 +28,11 @@ const getPointsForWeek = (data, moduleId) => {
   const correct_week = data.points.modules.find( module => module.id === moduleId )
 
   if (correct_week !== undefined) {
-    return correct_week.points
+    const exercises = correct_week.exercises.reduce((sum, exercise) => {
+      sum += (exercise.submission_count > 0) ? 1 : 0
+      return sum
+    }, 0)
+    return [correct_week.points, exercises]
   }
   console.log("progressData.js::getPointsForWeek(): Could not find points for a student!");
   return 0
@@ -78,6 +82,10 @@ const addCumulativePointData = (data, correctModules) => {
 
         // Calculate cumulative points for student into a list:
         result.cumulativePoints = calcCumulatives(newModules.map(module => module.points))
+        result.cumulativeExercises = calcCumulatives(newModules.map(module => module.exercises.reduce((sum, exercise) => {
+          sum += (exercise.submission_count > 0) ? 1 : 0
+          return sum
+        }, 0)))
       }
     })
   })
@@ -96,29 +104,44 @@ const getData = () => {
 
       const results = []
       const resultsCumulative = []
-      
-      const weeks1 = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16] // TODO
-      const weeks = weeks1.map(week => { return { week: week } })
+      const exerciseResults = []
+      const exerciseResultsCumulative = []
+
+      const weeks = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
       weeks.forEach(week => {
+        const exerciseWeek = {...week}
+
         const weekCumulatively = {week: week.week}
+        const exerciseWeekCumulatively = {week: week.week}
 
         response.data.hits.hits.forEach(hit => {
           hit._source.results.forEach(result => {
             if (!result.username.includes("redacted")) {
 
-              week[result.student_id] = getPointsForWeek(result, moduleMapping[week.week-1])
+              const [weekPoints, weekExercises] = getPointsForWeek(result, moduleMapping[week.week-1])
+              week[result.student_id] = weekPoints
+              exerciseWeek[result.student_id] = weekExercises
+
               weekCumulatively[result.student_id] = result.cumulativePoints[week.week-1]
+              exerciseWeekCumulatively[result.student_id] = result.cumulativeExercises[week.week-1]
             }
           })
         })
+
         results.push(week)
         resultsCumulative.push(weekCumulatively)
+
+        exerciseResults.push(exerciseWeek)
+        exerciseResultsCumulative.push(exerciseWeekCumulatively)
       })
 
-      return [calcWeeklyAvgs(results), calcWeeklyAvgs(resultsCumulative)]
+      return [calcWeeklyAvgs(results),
+              calcWeeklyAvgs(resultsCumulative),
+              calcWeeklyAvgs(exerciseResults),
+              calcWeeklyAvgs(exerciseResultsCumulative)]
     })
-    .catch(someError => [])
+    .catch(someError => [[], []])
 
   return request
 }
@@ -129,7 +152,7 @@ const getStudentIds = (data) => {
     console.log("progressData.js::getStudentIds(): data is undefined. Returning empty student list.");
     return []
   }
-  const list = Object.keys(data[0]).map(key => key)   // Note/TODO; Contains excess keys: "week" and "weeklyAvgs"
+  const list = Object.keys(data[0]).map(key => key)
 
   const toRemove =  ["week", "weeklyAvgs"]
   toRemove.forEach(item => {

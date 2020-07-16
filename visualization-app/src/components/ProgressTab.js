@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush, Tooltip } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush } from 'recharts';
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentSelector from './StudentSelector'
@@ -28,25 +28,29 @@ const Controls = (props) => {
 const ProgressTab = () => {
 
   const [ studentIds, setStudentIds ] = useState([])
-  const [ weeklyPoints, setWeeklyPoints ] = useState([{name: "init"}])
-  const [ cumulativeWeeklyPoints, setCumulativeWeeklyPoints ] = useState([{name: "init"}])
+  const [ weeklyPoints, setWeeklyPoints ] = useState([])
+  const [ cumulativePoints, setCumulativePoints ] = useState([{name: "init"}])
+  const [ weeklyExercises, setWeeklyExercises ] = useState([])
+  const [ cumulativeExercises, setCumulativeExercises ] = useState([{name: "init"}])
 
-  const [ modes, setModes ] = useState([])
-  const [ displayedModes, setdisplayedModes ] = useState([])
-  const [ selectedMode, setSelectedMode ] = useState("")
+  const modes = ["points", "exercises", "commits"]
+  const [ displayedModes, setdisplayedModes ] = useState(["exercises", "commits"])
+  const [ selectedMode, setSelectedMode ] = useState("points")
 
-  const [ showableLines, setShowableLines ] = useState([])
+  const showableLines = ["Average", "Expected"]
   const [ showAvg, setShowAvg ] = useState(true)
   const [ showExpected, setShowExpected ] = useState(true)
 
   const [ displayedStudents, setDisplayedStudents ] = useState([])
+  const [ displayedData, setDisplayedData ] = useState([])
+  const [ displayedCumulativeData, setDisplayedCumulativeData ] = useState([{name: "init"}])
 
   const axisNames = ['Week', 'Points']
   const syncKey = 'syncKey'
   const avgDataKey = 'weeklyAvgs'
   const dataKey = 'name'
-  const chartWidth = document.documentElement.clientWidth*0.9
-  const chartHeight = document.documentElement.clientHeight*0.5
+  const chartWidth = document.documentElement.clientWidth * 0.9
+  const chartHeight = document.documentElement.clientHeight * 0.5
   const selectorHeight = 40
   const avgStrokeWidth = 3
   const studentStrokeWidth = 2
@@ -54,24 +58,23 @@ const ProgressTab = () => {
 
   useEffect(
     () => {
-
       dataService
       .getData()
       .then(response => {
-        const [weekly, cumulative] = response
-        setWeeklyPoints(weekly)
-        setCumulativeWeeklyPoints(cumulative)
-        
-        const ids = dataService.getStudentIds(weekly)
+        const [weeklyPts, cumulativePts, weeklyExers, cumulativeExers] = response
+
+        setWeeklyPoints(weeklyPts)
+        setCumulativePoints(cumulativePts)
+        setWeeklyExercises(weeklyExers)
+        setCumulativeExercises(cumulativeExers)
+
+        const ids = dataService.getStudentIds(weeklyPts)
         setStudentIds(ids)
         setDisplayedStudents(ids)
+
+        setDisplayedData(weeklyPts)
+        setDisplayedCumulativeData(cumulativePts)
       })
-
-      setModes(["points", "exercises", "commits"])
-      setSelectedMode("points")
-      setdisplayedModes(["exercises", "commits"])
-      setShowableLines(["Average", "Expected"])
-
     }, []
   )
 
@@ -100,8 +103,25 @@ const ProgressTab = () => {
   }
 
   const handleModeClick = (newMode) => {
+    if (selectedMode === newMode) {
+      return
+    }
+    
     setSelectedMode(newMode)
     setdisplayedModes(modes.filter(name => name !== newMode))
+    
+    if (newMode === "points") {
+      setDisplayedData(weeklyPoints)
+      setDisplayedCumulativeData(cumulativePoints)
+    }
+    else if (newMode === "exercises") {
+      setDisplayedData(weeklyExercises)
+      setDisplayedCumulativeData(cumulativeExercises)
+    }
+    else {
+      // TODO:
+      console.log("todo: selected unimplemented mode:", newMode);
+    }
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
@@ -134,18 +154,18 @@ const ProgressTab = () => {
 
       <LineChart className="intendedChart"
                  width={chartWidth} height={chartHeight}
-                 data={weeklyPoints} syncId={syncKey}
+                 data={displayedData} syncId={syncKey}
                  margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
-        {displayedStudents.map(key => 
-          <Line key={helpers.studentToId(key)}
-                onClick={() => handleStudentLineClick(helpers.studentToId(key))}
+        {displayedStudents.map(student => 
+          <Line key={helpers.studentToId(student)}
+                onClick={() => handleStudentLineClick(helpers.studentToId(student))}
                 className="hoverable" 
                 type="linear"
-                dataKey={key}
+                dataKey={student}
                 stroke={studentStrokeColor}
                 strokeWidth={studentStrokeWidth}>
           </Line>
@@ -154,14 +174,13 @@ const ProgressTab = () => {
         <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
               stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
 
-        <Tooltip></Tooltip>
       </LineChart>
 
       <h2>{'Cumulative Weekly Points'}</h2>
       
       <LineChart className="intendedChart"
                  width={chartWidth} height={chartHeight+selectorHeight}
-                 data={cumulativeWeeklyPoints} syncId={syncKey}
+                 data={displayedCumulativeData} syncId={syncKey}
                  margin={{ top: 10, right: 15, left: 25, bottom: selectorHeight }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
@@ -180,8 +199,6 @@ const ProgressTab = () => {
 
         <Line type="linear" dataKey={avgDataKey} dot={false}
               stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
-        
-        <Tooltip></Tooltip>
         
         <Brush y={chartHeight-5} tickFormatter={(tick) => tick + 1}></Brush>
       </LineChart>
