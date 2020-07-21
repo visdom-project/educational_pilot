@@ -50,71 +50,103 @@ const StatusTab = () => {
 
   const [ progressData, setProgressData ] = useState([])
   const [ commonData, setCommonData ]  = useState([])
+  const [ submissionData, setSubmissionData ] = useState([])
   const [ commonDataToDisplay, setcommonDataToDisplay ] = useState({})
-  const [ max, setMax ] = useState(0)
+  const [ max, setMax ] = useState(1)
 
   const [ weeks, setWeeks ] = useState(["1"])
   const [ selectedWeek, setSelectedWeek ] = useState("1")
   const [ weekData, setWeekData ] = useState([])
+  const [ selectedSubmissionData, setSelectedSubmissionData] = useState([])
 
-  const modes = ["points", "exercises", "commits"]
-  const [ displayedModes, setdisplayedModes ] = useState(["exercises", "commits"])
-  const [ selectedMode, setSelectedMode ] = useState("points")
+  const modes = ["points", "exercises", "submissions", "commits"]
+  const [ selectedMode, setSelectedMode ] = useState(modes[2])
+  const [ displayedModes, setdisplayedModes ] = useState(modes.filter(mode => mode !== selectedMode))
 
-  const pointDataKeys = {
-    studentId: "id",
-    maxPts: "maxPts",
-    week: "week",
-    totalPoints: "totPts",
-    missed: "missed",
+  const allKeys = {
+    "points": {
+      studentId: "id",
+      max: "maxPts",
+      week: "week",
+      totalPoints: "totPts",
+      missed: "missed",
 
-    cumulativeAvgs: 'cumulativeAvgs',
-    cumulativeMidExpected: 'cumulativeMidExpected',
-    cumulativeMinExpected: 'cumulativeMinExpected'
+      cumulativeAvgs: 'cumulativeAvgs',
+      cumulativeMidExpected: 'cumulativeMidExpected',
+      cumulativeMinExpected: 'cumulativeMinExpected'
+    },
+    "exercises": {
+      studentId: "id",
+      max: "maxExer",
+      week: "weekExer",
+      totalPoints: "totExer",
+      missed: "missedExer",
+      
+      cumulativeAvgs: 'cumulativeAvgsExercises',
+      cumulativeMidExpected: 'cumulativeMidExpectedExercises',
+      cumulativeMinExpected: 'cumulativeMinExpectedExercises'
+    },
+    "submissions": {
+      studentId: "id",
+      max: "maxSubs",
+      week: "week",
+      totalPoints: "totPts",
+      missed: "missed",
+
+      cumulativeAvgs: 'cumulativeAvgs',
+      cumulativeMidExpected: 'cumulativeMidExpected',
+      cumulativeMinExpected: 'cumulativeMinExpected'
+    },
+    "commits": {
+      studentId: "id",
+      max: "maxPts",
+      week: "week",
+      totalPoints: "totPts",
+      missed: "missed",
+
+      cumulativeAvgs: 'cumulativeAvgs',
+      cumulativeMidExpected: 'cumulativeMidExpected',
+      cumulativeMinExpected: 'cumulativeMinExpected'
+    }
   }
-  const exerciseDataKeys = {
-    studentId: "id",
-    maxPts: "maxExer",
-    week: "weekExer",
-    totalPoints: "totExer",
-    missed: "missedExer",
-    
-    cumulativeAvgs: 'cumulativeAvgsExercises',
-    cumulativeMidExpected: 'cumulativeMidExpectedExercises',
-    cumulativeMinExpected: 'cumulativeMinExpectedExercises'
-  }
-  const [ dataKeys, setDataKeys ] = useState(pointDataKeys)
+  const [ dataKeys, setDataKeys ] = useState(allKeys[selectedMode])
   const commonKeys = { average: 'avg', expectedMinimum: 'min', expectedMedium: 'mid' }
+
+  const axisNames = {
+    "points": ['Students', 'Points'],
+    "exercises": ['Students', 'Exercises'],
+    "commits": ['Students', 'Commits'],
+    "submissions": ['Students', 'Exercises']
+  }
 
   const showableLines = ["Average", "Expected"]
   const [ showAvg, setShowAvg ] = useState(true)
   const [ showExpected, setShowExpected ] = useState(true)
 
   const [ selectedStudent, setSelectedStudent ] = useState("")
-
-  const axisNames = {
-    "points": ['Students', 'Points'],
-    "exercises": ['Students', 'Exercises'],
-    "commits": ['Students', 'Commits']
-  }
   
   const chartWidth = document.documentElement.clientWidth*0.9
-  const chartHeight = document.documentElement.clientHeight*0.5
+  const chartHeight = document.documentElement.clientHeight*0.7
   
   useEffect(
     () => {
       dataService
         .getData()
         .then(response => {
-          const [pData, commons] = response
+          const [pData, commons, submissions] = response
+
+          console.log("progress data", pData);
+          console.log("common data", commons);
+          console.log("submission data", submissions);
 
           // Fetch needed data:
           setProgressData(pData)
           setCommonData(commons)
+          setSubmissionData(submissions)
           setWeeks(pData.map(week => week.week))
 
           // Set initial UI state:
-          handleWeekSwitch(1, pData, commons)
+          handleWeekSwitch(1, pData, commons, undefined, submissions)
         })
     }, []
   )
@@ -131,26 +163,29 @@ const StatusTab = () => {
     setSelectedMode(newMode)
     setdisplayedModes(modes.filter(name => name !== newMode))
     
-    const newKeys = (newMode === "points") ? pointDataKeys : exerciseDataKeys
+    const newKeys = allKeys[newMode]
     setDataKeys(newKeys)
 
     handleWeekSwitch(undefined, undefined, undefined, newKeys)
   }
 
-  const handleWeekSwitch = (newWeek, data, commons, keys) => {
+  const handleWeekSwitch = (newWeek, data, commons, keys, submissions) => {
     
     if (newWeek === undefined) { newWeek = selectedWeek }
     if (data === undefined) { data = progressData }
     if (commons === undefined) { commons = commonData }
     if (keys === undefined ) { keys = dataKeys}
+    if (submissions === undefined) { submissions = submissionData }
 
     setSelectedWeek(newWeek)
 
-    if (data[newWeek-1] !== undefined) {
+    if (data[newWeek-1] !== undefined && data[newWeek-1]["data"] !== undefined) {
 
-      setMax(data[newWeek-1]["data"][0][keys.maxPts])
+      setMax(data[newWeek-1]["data"][0][keys.max])
       
       setWeekData(data[newWeek-1]["data"])
+
+      setSelectedSubmissionData(submissions[newWeek-1]["data"])
 
       setcommonDataToDisplay({
         'avg': commons[keys.cumulativeAvgs][newWeek-1],
@@ -198,7 +233,8 @@ const StatusTab = () => {
                   data={weekData} dataKeys={dataKeys}
                   commonData={commonDataToDisplay} commonKeys={commonKeys}
                   axisNames={axisNames[selectedMode]} max={max}
-                  handleClick={handleStudentClick}>
+                  handleClick={handleStudentClick}
+                  visuMode={selectedMode} submissionData={selectedSubmissionData}>
       </MultiChart>
 
       <StudentDetailView student={selectedStudent}></StudentDetailView>

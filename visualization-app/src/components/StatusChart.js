@@ -1,6 +1,7 @@
 import React from 'react'
-import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine, Text } from 'recharts';
 import '../stylesheets/studentbar.css'
+import { findByLabelText } from '@testing-library/react';
 
 const CustomLabel = (props) => {
   return (
@@ -16,7 +17,7 @@ const CustomLabel = (props) => {
   )
 }
 
-const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, commonKeys, max, handleClick }) => {
+const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, commonKeys, max, handleClick, visuMode, submissionData }) => {
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
@@ -29,16 +30,140 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
   const barWidth = 10
 
   if (data === undefined || commonData === undefined) {
-    console.log("Either student data or common student data is undefined.")
-    console.log("data:", data)
-    console.log("commond data:", commonData)
+    console.log("Either student data or common student data is undefined. Data:", data, "common data:", commonData)
+    return <div className="intended">No data to display.</div>
+  }
+
+  if (axisNames === undefined) {
+    axisNames = ["x-axis", "y-axis"]
+  }
+
+  let submissionMapping = []
+  let submissionTicks = []
+  const alphabets = "abcdefghijklmnopqrstuvwxyz"
+  if (submissionData !== undefined && submissionData.length > 0) {
+    let i = 0
+    submissionMapping = submissionData[0].submissions.map(item => {
+      i += 1
+      submissionTicks.push(i)
+      return {key: "exercise-".concat(i), stackId: alphabets[i-1]}
+    })
+  }
+
+  if (visuMode === "submissions") {
     return (
-      <div className="intended">No data to display.</div>
+      <div className="intended" style={{display: "flex", flexDirection:"column"}}>
+        <ComposedChart width={chartWidth} height={chartHeight} data={submissionData}
+                      margin={{ top: 10, right: 20, left: 45, bottom: 25 }}
+                      barGap={-barWidth}>
+          
+          <XAxis dataKey="id"
+                padding={{ left: 0, right: 0 }}
+                label={{ value: axisNames[0], position: 'bottom' }}/>
+          <YAxis label={{ value: axisNames[1], position: 'left', offset: -21 }}
+                type="number"
+                domain={['dataMin', 'dataMax']}
+                ticks={submissionTicks}/>
+
+          {submissionMapping.reverse().map(bar => 
+            <Bar className={"hoverable-bar"} key={bar.key} dataKey={bar.key} stackId={bar.stackId} fill="#c1ff9e69" stroke="#00000045" >{
+              data !== undefined ?
+                data.map((entry, index) => {
+                  const name = `cell-${bar.stackId}-${index}`
+                  return <Cell key={name}
+                               onClick={() => handleClick(entry, index)}>
+                        </Cell>
+                }) : ""}
+            </Bar>
+          )}
+
+          <ReferenceLine y={commonData[commonKeys.average]}
+                        stroke={averageColor}
+                        label={<CustomLabel
+                                  title="Avg"
+                                  color={averageColor}
+                                  pos={"above"}
+                                  chartWidth={chartWidth}/>}
+                        strokeDasharray="2 4" />
+
+          <ReferenceLine y={commonData[commonKeys.expectedMedium]}
+                        stroke={mediumExpectedColor}
+                        label={<CustomLabel
+                                  title={"Mid"}
+                                  color={mediumExpectedColor}
+                                  pos={"above"}
+                                  chartWidth={chartWidth}/>}
+                        strokeDasharray="3 3" />
+
+          <ReferenceLine y={commonData[commonKeys.expectedMinimum]}
+                        stroke={minimumExpectedColor}
+                        label={<CustomLabel
+                                  title={"Min"}
+                                  color={minimumExpectedColor}
+                                  pos={"below"}
+                                  chartWidth={chartWidth}/>}
+                        strokeDasharray="3 3" />
+
+        </ComposedChart>
+
+        <div style={{position: "absolute", paddingLeft:`${chartWidth * 0.06}px`, pointerEvents: "none"}}>
+          <table style={{fontSize: `${barWidth-3}px`, textAlign: "center", borderSpacing: "0px", paddingTop: "1em"}}><tbody>{
+            
+            // Draws a table on top of visu bars to display submission counts
+
+            submissionMapping.map(item => {
+              const i = alphabets.indexOf(item.stackId)
+
+              /** Math magic to calculate close enough spacing for table 
+               * elements that show submission counts for each exercise: */
+              const totalWidth = chartWidth * 0.9
+              const barCount = submissionData.length
+              const barsWidth = barCount * barWidth
+              const totalWidthAfterBars = totalWidth - barsWidth
+              const paddingWidth = Math.floor(totalWidthAfterBars / barCount)
+              const leftovers = totalWidthAfterBars - barCount * paddingWidth
+              const additionalPadding = Math.round(barCount / leftovers)
+              const additionalLeftovers = Math.floor(leftovers - barCount / additionalPadding) -2
+
+              const totalHeight = chartHeight * 0.85
+              const cellHeight = totalHeight / submissionMapping.length
+
+              // Create the table content:
+              let counter = 1
+              return <tr key={item.stackId}>
+                {submissionData.map(student => {
+                  
+                  // Divide spacing evenly between table columns:
+                  let pad = paddingWidth
+                  pad = (counter % additionalPadding === 0) ? pad+1 : pad
+                  pad = (counter % additionalLeftovers === 0) ? pad+1 : pad
+                  counter += 1
+
+                  const style = {
+                    width: `${barWidth}px`,
+                    paddingLeft: `${pad}px`,
+                    paddingRight: "0px",
+                    height: `${cellHeight}px`
+                  }
+                  
+                  // Make the font size smaller if a submission count has more than 1 digit:
+                  if (student.submissions[i] > 9) {
+                    style.fontSize = `${barWidth-2}px`
+                  }
+
+                  return <td style={style} key={student.id}>{student.submissions[i]}</td>
+                })}
+              </tr>
+            })}
+          </tbody></table>
+        </div>
+
+      </div>
     )
   }
 
   const mapping = [{
-    key: dataKeys["maxPts"],
+    key: dataKeys["max"],
     color: "white",
     stroke: "darkgrey"
   },
@@ -65,9 +190,9 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                      barGap={-barWidth}>
         
         <XAxis dataKey="id"
-               padding={{left: 0, right: 0}}
+               padding={{ left: 0, right: 0 }}
                label={{ value: axisNames[0], position: 'bottom' }}/>
-        <YAxis label={{ value: axisNames[1], position: 'left', offset: 0 }}
+        <YAxis label={{ value: axisNames[1], position: 'left', offset: -21 }}
                type="number"
                domain={['dataMin', 'dataMax']}
                ticks={ticks}/>
@@ -79,7 +204,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
             data !== undefined ?
               data.map((entry, index) => 
                 <Cell key={`cell-${index}`} onClick={() => handleClick(entry, index)}/>) :
-              ""}
+                ""}
           </Bar>
         )}
 
