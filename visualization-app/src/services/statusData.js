@@ -10,6 +10,7 @@ const getWeeklyPoints = (modules, mapping) => {
   const weeklyExercises = {}
   const weeklyExerciseMaxes = []
   const weeklySubmissions = {}
+  const weeklyPassed = {}
   
   modules.forEach(module => {
 
@@ -38,17 +39,14 @@ const getWeeklyPoints = (modules, mapping) => {
       weeklyExerciseMaxes.push(module.exercises.length)
 
       // How many submissions student has made in each exercise:
-      weeklySubmissions[week] = module.exercises.map(exercise => {
-        /*return {    // TODO: Use this is info needed about whether the exercises are passed
-          passed: exercise.points > exercise.points_to_pass,
-          submissions: exercise.submission_count
-        }*/
-        return exercise.submission_count
-      })
+      weeklySubmissions[week] = module.exercises.map(exercise => exercise.submission_count)
+
+      // Which exercises the student has completed successfully:
+      weeklyPassed[week] = module.exercises.map(exercise => exercise.points > exercise.points_to_pass)
     }
   })
 
-  return [weeklyPts, weeklyMaxes, weeklyExercises, weeklyExerciseMaxes, weeklySubmissions]
+  return [weeklyPts, weeklyMaxes, weeklyExercises, weeklyExerciseMaxes, weeklySubmissions, weeklyPassed]
 }
 
 const getModuleMapping = (modules) => {
@@ -80,7 +78,8 @@ const formatSubmissionData = (data) => {
     week.data = data.map(student => {
       const newStudent = {
         id: student.id,
-        submissions: student.weeklySubmissions[week.week]
+        submissions: student.weeklySubmissions[week.week],
+        passed: student.weeklyPassed[week.week]
       }
 
       let i = 0
@@ -116,7 +115,7 @@ const getData = () => {
 
             const [weeklies, weeklyMaxes,
               weeklyExercises, weeklyExerciseMaxes,
-              weeklySubmissions
+              weeklySubmissions, weeklyPassed
             ] = getWeeklyPoints(result.points.modules, moduleMapping)
 
             const formattedResult = {
@@ -137,7 +136,8 @@ const getData = () => {
             
             submissionData.push({
               id: result.username,
-              weeklySubmissions: weeklySubmissions
+              weeklySubmissions: weeklySubmissions,
+              weeklyPassed: weeklyPassed
             })
           }
         })
@@ -214,9 +214,6 @@ const calcCommonData = (data) => {
   const cumulativeExerMaxes = (data.length > 0) ?
   calcCumulatives(data[0].weeklyExerciseMaxes.concat(0)).slice(1, data[0].weeklyExerciseMaxes.length+1)
   : []
-  
-  // TODO: Calculate cumulative points and submitted exercises for each student:
-  // TODO: Move calculating students' cumulative points here:
 
   // Calculate weekly averages for points and exercises:
   weeks.forEach(week => {

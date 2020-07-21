@@ -1,7 +1,6 @@
 import React from 'react'
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine, Text } from 'recharts';
 import '../stylesheets/studentbar.css'
-import { findByLabelText } from '@testing-library/react';
 
 const CustomLabel = (props) => {
   return (
@@ -15,6 +14,22 @@ const CustomLabel = (props) => {
       {props.title}
     </text>
   )
+}
+
+/** Chooses a fitting color code for given exercise and student.
+ * 
+ * Green for passed exercises;
+ *  - Light green for completing the task with at most 5 submissions,
+ *  - darker green for exceeding 5 submissions.
+ * 
+ * White or red for uncompleted exercises;
+ *  - White if student has not submitted anything,
+ *  - red if the exercise is uncompleted in spite of submitting answers.
+ */
+const selectColor = (data, index) => {
+  return data.passed[index] ? 
+    ( data.submissions[index] > 5 ? "green" : "#62ce4b") :
+    ( data.submissions[index] < 1 ? "white" : "#e65a67" )
 }
 
 const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, commonKeys, max, handleClick, visuMode, submissionData }) => {
@@ -67,11 +82,12 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
 
           {submissionMapping.reverse().map(bar => 
             <Bar className={"hoverable-bar"} key={bar.key} dataKey={bar.key} stackId={bar.stackId} fill="#c1ff9e69" stroke="#00000045" >{
-              data !== undefined ?
-                data.map((entry, index) => {
+              submissionData !== undefined ?
+              submissionData.map((entry, index) => {
                   const name = `cell-${bar.stackId}-${index}`
                   return <Cell key={name}
-                               onClick={() => handleClick(entry, index)}>
+                               onClick={() => handleClick(entry, index)}
+                               fill={selectColor(entry, alphabets.indexOf(bar.stackId))}>
                         </Cell>
                 }) : ""}
             </Bar>
@@ -107,7 +123,13 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
         </ComposedChart>
 
         <div style={{position: "absolute", paddingLeft:`${chartWidth * 0.06}px`, pointerEvents: "none"}}>
-          <table style={{fontSize: `${barWidth-3}px`, textAlign: "center", borderSpacing: "0px", paddingTop: "1em"}}><tbody>{
+          <table style={{ fontSize: `${barWidth-2}px`,
+                          textAlign: "center",
+                          borderSpacing: "0px",
+                          paddingTop: "1em",
+                          color: "white",
+                          fontWeight: "bold"
+                        }}><tbody>{
             
             // Draws a table on top of visu bars to display submission counts
 
