@@ -318,6 +318,11 @@ const getCommitData = () => {
       response.data.hits.hits.forEach(hit => {
         hit._source.results.forEach(result => {
 
+          // Which exercises the student has passed:
+          const passedExercises = result.points.modules
+            .filter(module => module.max_points > 0 || module.id === 570)
+            .map(module => module.exercises.map(exercise => exercise.passed))
+
           // Start with a data stucture with proper default values:
           const newCommits = Object.keys(PROJECT_MAPPING).map(moduleName => {
             return {module_name: moduleName, projects: PROJECT_MAPPING[moduleName].map(projectName => {
@@ -354,12 +359,14 @@ const getCommitData = () => {
 
           // Map each student's commit data to correct weeks in result data:
           result.commits.forEach(module => {
+            const moduleInd = module.module_name === "01-14" ? 14 : (parseInt(module.module_name)-1)
 
             // Format student data into displayable format:
             const student = {
               id: result.username,
               commit_counts: module.projects.map(project => project.commit_count),
-              project_names: module.projects.map(project => project.name)
+              project_names: module.projects.map(project => project.name),
+              passed: passedExercises[moduleInd]
             }
 
             // Separate commit counts to their own fields:

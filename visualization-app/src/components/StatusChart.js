@@ -20,7 +20,7 @@ const CustomLabel = (props) => {
  * 
  * For commit data:
  *   - white for exercises with 0 commits
- *   - lightblue for exercises with commits in it.
+ *   - lightblue for exercises with commits in it, shade by commit count.
  * 
  * For submission data:
  * 
@@ -32,9 +32,14 @@ const CustomLabel = (props) => {
  *     - White if student has not submitted anything,
  *     - red if the exercise is uncompleted in spite of submitting answers.
  */
-const selectColor = (data, index) => {
-  if (data.passed === undefined) {
-    return data.commit_counts[index] < 1 ? "white" : "lightblue"
+const selectColor = (data, index, key) => {
+  if (key === "commit_counts") {
+    return data.passed[index] ? 
+            ( data.commit_counts[index] < 3 ? "lightblue" : 
+              data.commit_counts[index] < 6 ? "#89cee4" : 
+              data.commit_counts[index] < 9 ? "#509ab3" : 
+              data.commit_counts[index] < 15 ? "#286482" : "#1e4a61" ) :
+            ( data.commit_counts[index] < 1 ? "white" : "#e65a67" )
   }
 
   return data.passed[index] ? 
@@ -99,7 +104,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                   const name = `cell-${bar.stackId}-${index}`
                   return <Cell key={name}
                                onClick={() => handleClick(entry, index)}
-                               fill={selectColor(entry, alphabets.indexOf(bar.stackId))}>
+                               fill={selectColor(entry, alphabets.indexOf(bar.stackId), key)}>
                         </Cell>
                 }) : ""}
             </Bar>
@@ -111,7 +116,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                           textAlign: "center",
                           borderSpacing: "0px",
                           paddingTop: "1em",
-                          color: key === "submissions" ? "white" : "#474747",
+                          color: "white",
                           fontWeight: "bold"
                         }}><tbody>{
             
