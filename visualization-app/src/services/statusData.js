@@ -2,6 +2,7 @@ import axios from 'axios'
 import helpers from './helpers'
 
 const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
+const gitlabUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
 
 const getWeeklyPoints = (modules, mapping) => {
   
@@ -284,4 +285,100 @@ const formatProgressData = (pData) => {
   return [helpers.orderData(dataByWeeks(data)), commonData]
 }
 
-export default { formatProgressData, getData };
+const getCommitData = () => {
+
+  const request = axios
+    .get(gitlabUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
+    .then((response) => {
+
+      // TODO: remove hard-coding from this mapping of modules and corresponding project names:
+      const PROJECT_MAPPING = {
+        "01": ["first_submission", "gitignore"],
+        "02": ["(K)/(N)", "(K)/(N)", "temperature", "number_series_game", "mean", "cube"],
+        "03": ["lotto", "swap", "encryption", "errors", "molkky"],
+        "04": ["container", "split", "random_numbers", "game15", "waterdrop_game_v1/feedback"],
+        "05": ["line_numbers", "mixing_alphabets", "points", "wordcount"],
+        "06": ["palindrome", "sum", "vertical", "network"],
+        "07": ["library", "(K) feedback"],
+        "08": ["osoittimien_tulostukset (K)/(N)", "student_register", "arrays", "reverse_polish"],
+        "09": ["cards", "traffic", "task_list"],
+        "10": ["valgrind", "calculator", "reverse"],
+        "11": ["family", "bus_timetables/(K)/(N)/feedback"], 
+        "12": ["zoo", "colorpicker_designer", "find_dialog", "timer", "bmi"], 
+        "13": ["moving_circle2/hanoi", "tetris", "waterdrop_game_v3/(K)/(N)/feedback"], 
+        "01-14": ["command_line"],
+        "15": [],
+        "16": ["(K)/(N)"]}
+
+      const results = Object.keys(PROJECT_MAPPING).map(moduleName => {
+        return {"week": moduleName, data: []}
+      })
+
+      // Parse fetched commit data into proper format and fill in missing data:
+      response.data.hits.hits.forEach(hit => {
+        hit._source.results.forEach(result => {
+
+          // Start with a data stucture with proper default values:
+          const newCommits = Object.keys(PROJECT_MAPPING).map(moduleName => {
+            return {module_name: moduleName, projects: PROJECT_MAPPING[moduleName].map(projectName => {
+              return {name: projectName, commit_count: 0, commit_meta: []}
+            })}
+          })
+
+          // Override default values with student data wherever there is any:
+          result.commits.forEach(module => {
+
+            const newModule = module
+            const moduleIndex = newCommits.findIndex(commitModule => commitModule.module_name === module.module_name)
+
+            if (moduleIndex > -1) {  // Ignore modules with erroneous names
+
+              // Fill in missing project data:
+              const newProjects = newCommits[moduleIndex].projects
+              module.projects.forEach(studentProject => {
+                const projectIndex = newProjects.findIndex(project => project.name.includes(studentProject.name))
+                if (projectIndex < newProjects.length) {
+                  newProjects[projectIndex] = studentProject
+                }
+                else {
+                  console.log("Over-indexing:", projectIndex, "of", newProjects);
+                }
+              })
+              newModule.projects = newProjects
+
+              newCommits[moduleIndex] = newModule
+            }
+          })
+
+          result.commits = newCommits
+
+          // Map each student's commit data to correct weeks in result data:
+          result.commits.forEach(module => {
+
+            // Format student data into displayable format:
+            const student = {
+              id: result.username,
+              commit_counts: module.projects.map(project => project.commit_count),
+              project_names: module.projects.map(project => project.name)
+            }
+
+            // Separate commit counts to their own fields:
+            let i = 1
+            student.commit_counts.forEach(commit_count => {
+              student[`exercise-${i}`] = i
+              i += 1
+            })
+
+            results[results.findIndex(week => week.week === module.module_name)].data.push(student)
+          })
+        })
+      })
+
+      return results
+    })
+    .catch(someError => [[], []])
+
+  return request
+}
+
+export default { getData, getCommitData };

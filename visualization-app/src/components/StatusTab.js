@@ -8,6 +8,23 @@ const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
           handleToggleRefLineVisibilityClick, showAvg, showExpected,
           handleWeekClick, weeks, selectedWeek} = props
+
+  if (selectedMode === "submissions" || selectedMode === "commits") {
+    return (
+      <div className="fit-row">
+        <DropdownMenu handleClick={handleModeClick}
+                      options={modes}
+                      selectedOption={selectedMode}
+                      title={'Visualization mode:'}/>
+        <DropdownMenu handleClick={handleWeekClick}
+                      options={weeks}
+                      selectedOption={selectedWeek}
+                      title={'Visualize week:'}/>
+        <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
+      </div>
+    )
+  }
+    
   return (
     <div className="fit-row">
       <CheckBoxMenu options={showableLines}
@@ -51,21 +68,21 @@ const StatusTab = () => {
   const [ progressData, setProgressData ] = useState([])
   const [ commonData, setCommonData ]  = useState([])
   const [ submissionData, setSubmissionData ] = useState([])
+  const [ commitData, setCommitData ] = useState([])
   const [ commonDataToDisplay, setcommonDataToDisplay ] = useState({})
   const [ max, setMax ] = useState(1)
 
   const [ weeks, setWeeks ] = useState(["1"])
   const [ selectedWeek, setSelectedWeek ] = useState("1")
   const [ weekData, setWeekData ] = useState([])
-  const [ selectedSubmissionData, setSelectedSubmissionData] = useState([])
+  const [ selectedCountData, setSelectedCountData] = useState([])
 
   const modes = ["points", "exercises", "submissions", "commits"]
-  const [ selectedMode, setSelectedMode ] = useState(modes[2])
+  const [ selectedMode, setSelectedMode ] = useState(modes[1])
   const [ displayedModes, setdisplayedModes ] = useState(modes.filter(mode => mode !== selectedMode))
 
   const allKeys = {
     "points": {
-      studentId: "id",
       max: "maxPts",
       week: "week",
       totalPoints: "totPts",
@@ -76,7 +93,6 @@ const StatusTab = () => {
       cumulativeMinExpected: 'cumulativeMinExpected'
     },
     "exercises": {
-      studentId: "id",
       max: "maxExer",
       week: "weekExer",
       totalPoints: "totExer",
@@ -86,28 +102,8 @@ const StatusTab = () => {
       cumulativeMidExpected: 'cumulativeMidExpectedExercises',
       cumulativeMinExpected: 'cumulativeMinExpectedExercises'
     },
-    "submissions": {
-      studentId: "id",
-      max: "maxSubs",
-      week: "week",
-      totalPoints: "totPts",
-      missed: "missed",
-
-      cumulativeAvgs: 'cumulativeAvgs',
-      cumulativeMidExpected: 'cumulativeMidExpected',
-      cumulativeMinExpected: 'cumulativeMinExpected'
-    },
-    "commits": {
-      studentId: "id",
-      max: "maxPts",
-      week: "week",
-      totalPoints: "totPts",
-      missed: "missed",
-
-      cumulativeAvgs: 'cumulativeAvgs',
-      cumulativeMidExpected: 'cumulativeMidExpected',
-      cumulativeMinExpected: 'cumulativeMinExpected'
-    }
+    "submissions": {},
+    "commits": {}
   }
   const [ dataKeys, setDataKeys ] = useState(allKeys[selectedMode])
   const commonKeys = { average: 'avg', expectedMinimum: 'min', expectedMedium: 'mid' }
@@ -135,10 +131,6 @@ const StatusTab = () => {
         .then(response => {
           const [pData, commons, submissions] = response
 
-          console.log("progress data", pData);
-          console.log("common data", commons);
-          console.log("submission data", submissions);
-
           // Fetch needed data:
           setProgressData(pData)
           setCommonData(commons)
@@ -147,6 +139,12 @@ const StatusTab = () => {
 
           // Set initial UI state:
           handleWeekSwitch(1, pData, commons, undefined, submissions)
+        })
+
+      dataService
+        .getCommitData()
+        .then(response => {
+          setCommitData(response)
         })
     }, []
   )
@@ -166,32 +164,39 @@ const StatusTab = () => {
     const newKeys = allKeys[newMode]
     setDataKeys(newKeys)
 
-    handleWeekSwitch(undefined, undefined, undefined, newKeys)
+    handleWeekSwitch(undefined, undefined, undefined, newKeys, undefined, newMode)
   }
 
-  const handleWeekSwitch = (newWeek, data, commons, keys, submissions) => {
+  const handleWeekSwitch = (newWeek, data, commons, keys, submissions, mode) => {
     
     if (newWeek === undefined) { newWeek = selectedWeek }
     if (data === undefined) { data = progressData }
     if (commons === undefined) { commons = commonData }
     if (keys === undefined ) { keys = dataKeys}
     if (submissions === undefined) { submissions = submissionData }
+    if (mode === undefined) { mode = selectedMode }
 
     setSelectedWeek(newWeek)
 
-    if (data[newWeek-1] !== undefined && data[newWeek-1]["data"] !== undefined) {
-
+    if ((["exercises", "points"].includes(mode)) &&
+        (data[newWeek-1] !== undefined && data[newWeek-1]["data"] !== undefined)) {
+        
       setMax(data[newWeek-1]["data"][0][keys.max])
-      
       setWeekData(data[newWeek-1]["data"])
-
-      setSelectedSubmissionData(submissions[newWeek-1]["data"])
 
       setcommonDataToDisplay({
         'avg': commons[keys.cumulativeAvgs][newWeek-1],
         'mid': commons[keys.cumulativeMidExpected][newWeek-1],
         'min': commons[keys.cumulativeMinExpected][newWeek-1]
       })
+    }
+    else if (mode === "submissions") {
+      setSelectedCountData(submissions[newWeek-1]["data"])
+    }
+    else if (mode === "commits") {
+      const weekStr = newWeek.toString()
+      const key = (weekStr.length < 2) ? `0${weekStr}` : (weekStr !== "14") ? weekStr : "01-14"
+      setSelectedCountData(commitData[commitData.findIndex(module => module.week == key)]["data"])
     }
   }
 
@@ -234,7 +239,7 @@ const StatusTab = () => {
                   commonData={commonDataToDisplay} commonKeys={commonKeys}
                   axisNames={axisNames[selectedMode]} max={max}
                   handleClick={handleStudentClick}
-                  visuMode={selectedMode} submissionData={selectedSubmissionData}>
+                  visuMode={selectedMode} countData={selectedCountData}>
       </MultiChart>
 
       <StudentDetailView student={selectedStudent}></StudentDetailView>
