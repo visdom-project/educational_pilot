@@ -42,4 +42,27 @@ const orderData = (data) => {
   return orderedData
 }
 
-export default { studentToId, orderData };
+const compareCounts = (a, b) => {
+  const aVal = a.cumulativePoints
+  const bVal = b.cumulativePoints
+
+  if (aVal < bVal) {
+    return -1;
+  }
+  if (aVal > bVal) {
+    return 1;
+  }
+  return 0;
+}
+
+const orderCountData = (data) => {
+  const orderedData = []
+
+  data.forEach(week => {
+    orderedData.push({"week": week.week, "data": week.data.sort(compareCounts)})
+  });
+
+  return orderedData
+}
+
+export default { studentToId, orderData, orderCountData };

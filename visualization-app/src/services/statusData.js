@@ -323,6 +323,16 @@ const getCommitData = () => {
             .filter(module => module.max_points > 0 || module.id === 570)
             .map(module => module.exercises.map(exercise => exercise.passed))
 
+          const modulePoints = result.points.modules
+            .filter(module => module.max_points > 0 || module.id === 570)
+            .map(module => module.points)
+
+          const cumulativePoints = Object.keys(modulePoints).map(key => {
+            return modulePoints.slice(0, key+1).reduce((sum, val) => {
+              return sum + val
+            }, 0)
+          })
+
           // Start with a data stucture with proper default values:
           const newCommits = Object.keys(PROJECT_MAPPING).map(moduleName => {
             return {module_name: moduleName, projects: PROJECT_MAPPING[moduleName].map(projectName => {
@@ -366,7 +376,9 @@ const getCommitData = () => {
               id: result.username,
               commit_counts: module.projects.map(project => project.commit_count),
               project_names: module.projects.map(project => project.name),
-              passed: passedExercises[moduleInd]
+              passed: passedExercises[moduleInd],
+              weekPts: modulePoints[moduleInd],
+              cumulativePoints: cumulativePoints[moduleInd]
             }
 
             // Separate commit counts to their own fields:
@@ -381,7 +393,7 @@ const getCommitData = () => {
         })
       })
 
-      return results
+      return helpers.orderCountData(results)
     })
     .catch(someError => [[], []])
 
