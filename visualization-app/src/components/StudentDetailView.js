@@ -1,14 +1,17 @@
 import React from 'react'
 
-const parseProjectName = (name) => {
-  return name[0].toUpperCase() + name.slice(1).replace("_", " ").replace("_", " ")
+const parseName = (name) => {
+  const index = name.indexOf("|fi:")
+  return name.slice(index+"|fi:".length, name.length-1)
 }
 
 const ProjectDisplay = (project) => {
 
   project = project["project"]
 
-  const projectName = parseProjectName(project.name)
+  const exerciseNumber = project.name.split("|")[0]
+  const projectGitName = project.project_git_name
+  const projectName = parseName(project.name).split("|en:")[0]
   const commitCount = project.commit_count
   const commitHashes = project.commit_meta
   const maxPoints = project.max_points
@@ -17,32 +20,33 @@ const ProjectDisplay = (project) => {
   const pointsToPass = project.points_to_pass
   const submissionCount = project.submission_count
   const submissions = project.submissions
+  const isGitProject = !projectGitName.includes("(K)")
 
   return (
     <div className="partial-border" style={{width: "25vw"}}>
-      <h3>{projectName}</h3>
+      <h3>{exerciseNumber} {projectName}</h3>
       <div style={{paddingLeft: "8vh"}}>
-        Gathered points: {receivedPts} / {maxPoints}
+        Gathered points: {receivedPts}/{maxPoints}
         <br></br>
         Exercise passed: {passed ? "true" : "false"}
         <br></br>
         Submissions: {submissionCount}
         <br></br>
-        Commits: {commitCount}
+        <div style={{ paddingTop: "0.5em",
+                      color: isGitProject ? "black" : "lightgrey",
+                      fontStyle: isGitProject ? "normal" : "italic"}}>
+          Qt project name: {isGitProject ? projectGitName : " –"}
+          <br></br>
+          Commits: {commitCount}
+        </div>
       </div>
     </div>
   )
 }
 
-const parseName = (name) => {
-  const index = name.indexOf("|fi:")
-  return name.slice(index+"|fi:".length, name.length-1)
-}
-
 const ModuleDisplay = (data) => {
 
   data = data["data"]
-  console.log("module display / data:", data);
 
   const repoFolder = data.commit_module_name
   const moduleName = parseName(data.name)
@@ -65,7 +69,7 @@ const ModuleDisplay = (data) => {
       <div>
         <h3>Module {moduleNumber}: {moduleName}</h3>
         <div style={{ paddingLeft: "4vh", marginTop: "1em", marginBottom: "1.2em", width: "25vw"}}>
-          Gathered points: {gatheredPts} / {maxPoints}
+          Gathered points: {gatheredPts}/{maxPoints}
           <br></br>
           Module passed: {passed ? "true" : "false"}
           <br></br>
@@ -83,9 +87,6 @@ const ModuleDisplay = (data) => {
 }
 
 const PointsDisplay = (data) => {
-
-  console.log("exercise data:", data);
-
   return (
     <div>{
       data["data"].modules.map(module => 
@@ -116,7 +117,7 @@ const parseStudentData = (studentData) => {
         
         let i = 0
         commitModule.projects.forEach(project => {
-          newExercises[i].name = project.name
+          newExercises[i].project_git_name = project.name
           newExercises[i].commit_count = project.commit_count
           newExercises[i].commit_meta = project.commit_meta
           i += 1
@@ -135,8 +136,6 @@ const StudentDetailView = ({selectedStudentID, students}) => {
   
   if (selectedStudentID !== "") {
     const studentData = parseStudentData(students.find(student => student.student_id === selectedStudentID))
-
-    console.log("student data:", studentData);
 
     return (
       <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
