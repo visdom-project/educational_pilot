@@ -100,6 +100,15 @@ h3 {
   margin-right: 0;
 }
 
+.partial-border::after {
+  content: "";
+  display: block;
+  border-bottom: 0.5px solid lightgrey;
+  padding-bottom: 1.2em;
+  width: 73%;
+  margin-left: 4vh;
+}
+
 #showGradesButton {
   min-width: 10em;
   display: block;

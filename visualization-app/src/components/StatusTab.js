@@ -3,6 +3,7 @@ import dataService from '../services/statusData'
 import MultiChart from './StatusChart'
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
+import StudentDetailView from './StudentDetailView'
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
@@ -44,27 +45,9 @@ const Controls = (props) => {
   )
 }
 
-const StudentDetailView = ({student}) => {
-  
-  if (student === "") {
-    return (
-      <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
-        <h2>{'Student Details'}</h2>
-        <div className="intended">Click a student to view details.</div>
-      </div>
-    )
-  }
-
-  return (
-    <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
-      <h2>{'Student Details'}</h2>
-      <div className="intended">Student: {student}</div>
-    </div>
-  )
-}
-
 const StatusTab = () => {
 
+  const [ studentData, setStudentData ] = useState([])
   const [ progressData, setProgressData ] = useState([])
   const [ commonData, setCommonData ]  = useState([])
   const [ submissionData, setSubmissionData ] = useState([])
@@ -78,7 +61,7 @@ const StatusTab = () => {
   const [ selectedCountData, setSelectedCountData] = useState([])
 
   const modes = ["points", "exercises", "submissions", "commits"]
-  const [ selectedMode, setSelectedMode ] = useState(modes[1])
+  const [ selectedMode, setSelectedMode ] = useState(modes[0])
   const [ displayedModes, setdisplayedModes ] = useState(modes.filter(mode => mode !== selectedMode))
 
   const allKeys = {
@@ -144,16 +127,17 @@ const StatusTab = () => {
       dataService
         .getCommitData()
         .then(response => {
-          setCommitData(response)
+          const [commits, students] = response
+          setCommitData(commits)
+          setStudentData(students)
         })
     }, []
   )
 
-  const handleStudentClick = (data, index) => {
+  const handleStudentClick = (data, barIndex) => {
     if (data !== undefined) {
       const newSelected = data.id
       setSelectedStudent(newSelected)
-      console.log("Selected student:", newSelected);
     }
   }
 
@@ -196,7 +180,7 @@ const StatusTab = () => {
     else if (mode === "commits") {
       const weekStr = newWeek.toString()
       const key = (weekStr.length < 2) ? `0${weekStr}` : (weekStr !== "14") ? weekStr : "01-14"
-      setSelectedCountData(commitData[commitData.findIndex(module => module.week == key)]["data"])
+      setSelectedCountData(commitData[commitData.findIndex(module => module.week === key)]["data"])
     }
   }
 
@@ -242,7 +226,7 @@ const StatusTab = () => {
                   visuMode={selectedMode} countData={selectedCountData}>
       </MultiChart>
 
-      <StudentDetailView student={selectedStudent}></StudentDetailView>
+      <StudentDetailView selectedStudentID={selectedStudent} students={studentData}></StudentDetailView>
     </>
   )
 }

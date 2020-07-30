@@ -136,7 +136,7 @@ const getData = () => {
             results.push(formattedResult)
             
             submissionData.push({
-              id: result.username,
+              id: result.student_id,
               weeklySubmissions: weeklySubmissions,
               weeklyPassed: weeklyPassed
             })
@@ -294,25 +294,27 @@ const getCommitData = () => {
       // TODO: remove hard-coding from this mapping of modules and corresponding project names:
       const PROJECT_MAPPING = {
         "01": ["first_submission", "gitignore"],
-        "02": ["(K)/(N)", "(K)/(N)", "temperature", "number_series_game", "mean", "cube"],
+        "02": ["(K) Hello, World! (Tehtävä Aloitus)", "(K) Staattinen tyypitys (Tehtävä Tyypitys)", "temperature", "number_series_game", "mean", "cube"],
         "03": ["lotto", "swap", "encryption", "errors", "molkky"],
         "04": ["container", "split", "random_numbers", "game15", "waterdrop_game_v1/feedback"],
         "05": ["line_numbers", "mixing_alphabets", "points", "wordcount"],
         "06": ["palindrome", "sum", "vertical", "network"],
-        "07": ["library", "(K) feedback"],
-        "08": ["osoittimien_tulostukset (K)/(N)", "student_register", "arrays", "reverse_polish"],
+        "07": ["library", "(K) Kirjastoprojektin palaute (Tehtävä Palaute2)"],
+        "08": ["(K) Osoittimien_tulostukset (Tehtävä Osoittimet)", "student_register", "arrays", "reverse_polish"],
         "09": ["cards", "traffic", "task_list"],
         "10": ["valgrind", "calculator", "reverse"],
-        "11": ["family", "bus_timetables/(K)/(N)/feedback"], 
+        "11": ["family", "(K) Sukuprojektin palaute (Tehtävä Palaute3)"], 
         "12": ["zoo", "colorpicker_designer", "find_dialog", "timer", "bmi"], 
-        "13": ["moving_circle2/hanoi", "tetris", "waterdrop_game_v3/(K)/(N)/feedback"], 
+        "13": ["moving_circle2/hanoi", "tetris", "(K) Hanoin torni -rojektin palaute (Tehtävä Palaute4)"], 
         "01-14": ["command_line"],
         "15": [],
-        "16": ["(K)/(N)"]}
+        "16": ["(K) Tutkimussuostumus (Tehtävä gdpr)"]}
 
       const results = Object.keys(PROJECT_MAPPING).map(moduleName => {
         return {"week": moduleName, data: []}
       })
+
+      const studentData = []
 
       // Parse fetched commit data into proper format and fill in missing data:
       response.data.hits.hits.forEach(hit => {
@@ -352,20 +354,20 @@ const getCommitData = () => {
               const newProjects = newCommits[moduleIndex].projects
               module.projects.forEach(studentProject => {
                 const projectIndex = newProjects.findIndex(project => project.name.includes(studentProject.name))
-                if (projectIndex < newProjects.length) {
+                if (projectIndex < newProjects.length && projectIndex > -1) {
                   newProjects[projectIndex] = studentProject
                 }
                 else {
-                  console.log("Over-indexing:", projectIndex, "of", newProjects);
+                  //console.log("Excluding a project from commit data; it was not recognized as submittable exercise:", studentProject);
                 }
               })
               newModule.projects = newProjects
-
               newCommits[moduleIndex] = newModule
             }
           })
 
           result.commits = newCommits
+          studentData.push(result)
 
           // Map each student's commit data to correct weeks in result data:
           result.commits.forEach(module => {
@@ -373,7 +375,7 @@ const getCommitData = () => {
 
             // Format student data into displayable format:
             const student = {
-              id: result.username,
+              id: result.student_id,
               commit_counts: module.projects.map(project => project.commit_count),
               project_names: module.projects.map(project => project.name),
               passed: passedExercises[moduleInd],
@@ -393,7 +395,7 @@ const getCommitData = () => {
         })
       })
 
-      return helpers.orderCountData(results)
+      return [helpers.orderCountData(results), studentData]
     })
     .catch(someError => [[], []])
 

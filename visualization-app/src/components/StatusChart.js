@@ -68,20 +68,20 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
     axisNames = ["x-axis", "y-axis"]
   }
 
-  let submissionMapping = []
-  let submissionTicks = []
-  let key = (visuMode === "submissions") ? "submissions" : "commit_counts"
-  const alphabets = "abcdefghijklmnopqrstuvwxyz"
-  if (countData !== undefined && countData.length > 0) {
-    let i = 0
-    submissionMapping = countData[0][key].map(item => {
-      i += 1
-      submissionTicks.push(i)
-      return {key: "exercise-".concat(i), stackId: alphabets[i-1]}
-    })
-  }
-
   if (["submissions", "commits"].includes(visuMode)) {
+    
+    let submissionMapping = []
+    let submissionTicks = []
+    let key = (visuMode === "submissions") ? "submissions" : "commit_counts"
+    const alphabets = "abcdefghijklmnopqrstuvwxyz"
+    if (countData !== undefined && countData.length > 0) {
+      let i = 0
+      submissionMapping = countData[0][key].map(item => {
+        i += 1
+        submissionTicks.push(i)
+        return {key: "exercise-".concat(i), stackId: alphabets[i-1]}
+      })
+    }
 
     return (
       <div className="intended" style={{display: "flex", flexDirection:"column"}}>
