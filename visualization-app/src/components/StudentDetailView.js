@@ -58,6 +58,12 @@ const ModuleDisplay = (data) => {
   const submissionCount = data.submission_count
   const moduleNumber = (data.commit_module_name === "01-14") ? 14 : parseInt(data.commit_module_name)
 
+  const handleClick = () => {
+    document.querySelectorAll(`#module-${repoFolder}`).forEach(obj => {
+      obj.style.display = obj.style.display === "none" ? "block" : "none"
+    })
+  }
+
   return (
     <div className="fit-row" 
          style={{ padding: "0.5em",
@@ -65,10 +71,16 @@ const ModuleDisplay = (data) => {
                   border: "solid 1px darkgrey",
                   marginBottom: "0.5em",
                   marginLeft: "4vh"}}>
-      
+
+      <button style={{ color: "darkgrey",
+                       border: "lightgrey 1px solid",
+                       borderRadius: "3px"}}
+              onClick={handleClick}>
+      </button>
+
       <div>
         <h3>Module {moduleNumber}: {moduleName}</h3>
-        <div style={{ paddingLeft: "4vh", marginTop: "1em", marginBottom: "1.2em", width: "25vw"}}>
+        <div id={`module-${repoFolder}`} style={{ paddingLeft: "4vh", marginTop: "1em", marginBottom: "1.2em", width: "25vw"}}>
           Gathered points: {gatheredPts}/{maxPoints}
           <br></br>
           Module passed: {passed ? "true" : "false"}
@@ -77,7 +89,7 @@ const ModuleDisplay = (data) => {
         </div>
       </div>
 
-      <div>
+      <div id={`module-${repoFolder}`}>
         <div className="fit-row" style={{flexWrap: "wrap", paddingBottom: "1em"}}>
           {exerciseList.map(exercise => <ProjectDisplay key={exercise.name} project={exercise} />)}
         </div>
@@ -99,37 +111,42 @@ const PointsDisplay = (data) => {
 const parseStudentData = (studentData) => {
 
   const commitModules = studentData.commits
-    const pointModules = studentData.points.modules.filter(module => module.max_points > 0 || module.id === 570)
 
-    const mergedModules = pointModules
-    commitModules.forEach(commitModule => {
-      
-      const pointModuleIndex = pointModules.findIndex(pointModule => {
-        const pointModuleName = (pointModule.name[1] === ".") ? pointModule.name.slice(0, 1) : pointModule.name.slice(0, 2)
-        const commitModuleName = (commitModule.module_name === "01-14") ? 14 : parseInt(commitModule.module_name)
+  if (commitModules === undefined || studentData.points === undefined) {
+    return studentData
+  }
 
-        return parseInt(pointModuleName) === commitModuleName
-      })
+  const pointModules = studentData.points.modules.filter(module => module.max_points > 0 || module.id === 570)
 
-      if (pointModuleIndex > -1) {
-        mergedModules[pointModuleIndex]["commit_module_name"] = commitModule.module_name
-        const newExercises = mergedModules[pointModuleIndex].exercises
-        
-        let i = 0
-        commitModule.projects.forEach(project => {
-          newExercises[i].project_git_name = project.name
-          newExercises[i].commit_count = project.commit_count
-          newExercises[i].commit_meta = project.commit_meta
-          i += 1
-        })
-        mergedModules[pointModuleIndex].exercises = newExercises
-      }
+  const mergedModules = pointModules
+  commitModules.forEach(commitModule => {
+    
+    const pointModuleIndex = pointModules.findIndex(pointModule => {
+      const pointModuleName = (pointModule.name[1] === ".") ? pointModule.name.slice(0, 1) : pointModule.name.slice(0, 2)
+      const commitModuleName = (commitModule.module_name === "01-14") ? 14 : parseInt(commitModule.module_name)
+
+      return parseInt(pointModuleName) === commitModuleName
     })
 
-    studentData.points.modules = mergedModules
-    delete studentData.commits
+    if (pointModuleIndex > -1) {
+      mergedModules[pointModuleIndex]["commit_module_name"] = commitModule.module_name
+      const newExercises = mergedModules[pointModuleIndex].exercises
+      
+      let i = 0
+      commitModule.projects.forEach(project => {
+        newExercises[i].project_git_name = project.name
+        newExercises[i].commit_count = project.commit_count
+        newExercises[i].commit_meta = project.commit_meta
+        i += 1
+      })
+      mergedModules[pointModuleIndex].exercises = newExercises
+    }
+  })
 
-    return studentData
+  studentData.points.modules = mergedModules
+  delete studentData.commits
+
+  return studentData
 }
 
 const StudentDetailView = ({selectedStudentID, students}) => {

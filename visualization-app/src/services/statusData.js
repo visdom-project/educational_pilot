@@ -296,7 +296,7 @@ const getCommitData = () => {
         "01": ["first_submission", "gitignore"],
         "02": ["(K) Hello, World! (Tehtävä Aloitus)", "(K) Staattinen tyypitys (Tehtävä Tyypitys)", "temperature", "number_series_game", "mean", "cube"],
         "03": ["lotto", "swap", "encryption", "errors", "molkky"],
-        "04": ["container", "split", "random_numbers", "game15", "waterdrop_game_v1/feedback"],
+        "04": ["container", "split", "random_numbers", "game15", "(K) Peli 15 -projektin palaute (Tehtävä Palaute1)"],
         "05": ["line_numbers", "mixing_alphabets", "points", "wordcount"],
         "06": ["palindrome", "sum", "vertical", "network"],
         "07": ["library", "(K) Kirjastoprojektin palaute (Tehtävä Palaute2)"],
@@ -305,7 +305,7 @@ const getCommitData = () => {
         "10": ["valgrind", "calculator", "reverse"],
         "11": ["family", "(K) Sukuprojektin palaute (Tehtävä Palaute3)"], 
         "12": ["zoo", "colorpicker_designer", "find_dialog", "timer", "bmi"], 
-        "13": ["moving_circle2/hanoi", "tetris", "(K) Hanoin torni -rojektin palaute (Tehtävä Palaute4)"], 
+        "13": ["moving_circle2/hanoi", "tetris", "(K) Hanoin torni -projektin palaute (Tehtävä Palaute4)"], 
         "01-14": ["command_line"],
         "15": [],
         "16": ["(K) Tutkimussuostumus (Tehtävä gdpr)"]}
