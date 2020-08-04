@@ -1,8 +1,9 @@
 import axios from 'axios'
 import helpers from './helpers'
 
-const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
+//const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
 const gitlabUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
+const baseUrl = gitlabUrl
 
 const getWeeklyPoints = (modules, mapping) => {
   

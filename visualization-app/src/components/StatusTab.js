@@ -4,12 +4,13 @@ import MultiChart from './StatusChart'
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentDetailView from './StudentDetailView'
+import TresholdSelector from './TresholdSelector'
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
           handleToggleRefLineVisibilityClick, showAvg, showExpected,
           handleWeekClick, weeks, selectedWeek} = props
-
+  
   if (selectedMode === "submissions" || selectedMode === "commits") {
     return (
       <div className="fit-row">
@@ -57,12 +58,15 @@ const StatusTab = () => {
 
   const [ weeks, setWeeks ] = useState(["1"])
   const [ selectedWeek, setSelectedWeek ] = useState("1")
-  const [ weekData, setWeekData ] = useState([])
+  const [ selectedWeekData, setSelectedWeekData ] = useState([])
   const [ selectedCountData, setSelectedCountData] = useState([])
 
   const modes = ["points", "exercises", "submissions", "commits"]
   const [ selectedMode, setSelectedMode ] = useState(modes[0])
   const [ displayedModes, setdisplayedModes ] = useState(modes.filter(mode => mode !== selectedMode))
+
+  const [ treshold, setTreshold ] = useState(0.4)
+  const [ studentsBelowTreshold, setStudentsBelowTreshold ] = useState(-99)
 
   const allKeys = {
     "points": {
@@ -104,9 +108,9 @@ const StatusTab = () => {
 
   const [ selectedStudent, setSelectedStudent ] = useState("")
   
-  const chartWidth = document.documentElement.clientWidth*0.9
+  const chartWidth = 1600
   const chartHeight = document.documentElement.clientHeight*0.7
-  
+
   useEffect(
     () => {
       dataService
@@ -128,8 +132,22 @@ const StatusTab = () => {
         .getCommitData()
         .then(response => {
           const [commits, students] = response
+
           setCommitData(commits)
           setStudentData(students)
+
+          const selected = (commits !== undefined && commits.length > 0) ?
+            commits[commits.findIndex(module => module.week === "01")]["data"]
+            : []
+          setSelectedCountData(selected)
+
+          const requiredPts = (students[0] !== undefined) ? 
+            students[0].points.modules.find(module => module.exercises.length > 0).max_points * treshold
+            : -99
+          const studentCountBelowTreshold = selected
+            .filter(student => student.cumulativePoints < requiredPts)
+            .length
+          setStudentsBelowTreshold(studentCountBelowTreshold.length)
         })
     }, []
   )
@@ -166,7 +184,7 @@ const StatusTab = () => {
         (data[newWeek-1] !== undefined && data[newWeek-1]["data"] !== undefined)) {
         
       setMax(data[newWeek-1]["data"][0][keys.max])
-      setWeekData(data[newWeek-1]["data"])
+      setSelectedWeekData(data[newWeek-1]["data"])
 
       setcommonDataToDisplay({
         'avg': commons[keys.cumulativeAvgs][newWeek-1],
@@ -174,13 +192,26 @@ const StatusTab = () => {
         'min': commons[keys.cumulativeMinExpected][newWeek-1]
       })
     }
-    else if (mode === "submissions") {
-      setSelectedCountData(submissions[newWeek-1]["data"])
+
+    let newCountData = undefined
+  
+    if (mode === "submissions") {
+      if (submissions !== undefined) {
+        newCountData = submissions[newWeek-1]["data"]
+        setSelectedCountData(newCountData)
+      }
     }
-    else if (mode === "commits") {
-      const weekStr = newWeek.toString()
-      const key = (weekStr.length < 2) ? `0${weekStr}` : (weekStr !== "14") ? weekStr : "01-14"
-      setSelectedCountData(commitData[commitData.findIndex(module => module.week === key)]["data"])
+    else {
+      if (commitData !== undefined && commitData.length > 1) {
+        const weekStr = newWeek.toString()
+        const key = (weekStr.length < 2) ? `0${weekStr}` : (weekStr !== "14") ? weekStr : "01-14"
+        newCountData = commitData[commitData.findIndex(module => module.week === key)]["data"]
+        setSelectedCountData(newCountData)
+      }
+    }
+
+    if (newCountData !== undefined) {
+      changeTreshold(treshold, data[newWeek-1]["data"], newCountData)
     }
   }
 
@@ -205,6 +236,42 @@ const StatusTab = () => {
     })
   }
 
+  const changeTreshold = (newTreshold, selectedData, selectedCountD) => {
+
+    // Calculate how many students fall below required point count:
+    // TODO: Check that changing treshold works
+
+    if (selectedData === undefined) { selectedData = selectedWeekData }
+    //console.log("countdata:", selectedCountD);
+    if (selectedCountD === undefined) { selectedCountD = selectedCountData }
+
+    setTreshold(newTreshold)
+    
+    if (selectedData[0] !== undefined) {
+      const requiredPts = selectedData[0].maxPts * newTreshold
+      const studentCountBelowTreshold = selectedCountD
+        .filter(student => student.cumulativePoints < requiredPts)
+        .length
+
+      //console.log("required points:", requiredPts, "students below requirement:", studentCountBelowTreshold);
+
+      setStudentsBelowTreshold(studentCountBelowTreshold.length)
+
+      console.log("new count:", studentCountBelowTreshold);
+
+      // Update line place:
+      const refLine = document.querySelector("#treshold-line")
+      if (refLine !== null) {
+        const studentBar = document.querySelectorAll("path.recharts-rectangle")[studentCountBelowTreshold]
+        const leftOffset = 98
+        refLine.style.marginLeft = `${studentBar.getBoundingClientRect().x - leftOffset}px`
+      }
+      else {
+        console.log("Reference line is null");
+      }
+    }
+  }
+
   return (
     <>
       <div className="fit-row">
@@ -219,12 +286,18 @@ const StatusTab = () => {
       </div>
 
       <MultiChart chartWidth={chartWidth} chartHeight={chartHeight}
-                  data={weekData} dataKeys={dataKeys}
+                  data={selectedWeekData} dataKeys={dataKeys}
                   commonData={commonDataToDisplay} commonKeys={commonKeys}
                   axisNames={axisNames[selectedMode]} max={max}
                   handleClick={handleStudentClick}
-                  visuMode={selectedMode} countData={selectedCountData}>
+                  visuMode={selectedMode} countData={selectedCountData}
+                  studentsBelowTreshold={studentsBelowTreshold}>
       </MultiChart>
+
+      <TresholdSelector handleTresholdChange={changeTreshold}
+                        chartWidth={chartWidth}
+                        treshold={treshold}
+                        title="Select treshold for lagging students"/>
 
       <StudentDetailView selectedStudentID={selectedStudent} students={studentData}></StudentDetailView>
     </>

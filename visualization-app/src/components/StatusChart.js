@@ -47,7 +47,20 @@ const selectColor = (data, index, key) => {
     ( data.submissions[index] < 1 ? "white" : "#e65a67" )
 }
 
-const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, dataKeys, commonKeys, max, handleClick, visuMode, countData }) => {
+const MyRefLine = ({myX}) => {
+  return (
+    <div style={{ width: "2px", height: "64vh",
+                  position: "absolute", marginLeft: `${myX}px`,
+                  backgroundColor: "red", marginTop: "-70vh" }}
+         id="treshold-line"></div>
+  )
+}
+
+const MultiChart = (props) => {
+
+  const { chartWidth, chartHeight, data, commonData, axisNames,
+          dataKeys, commonKeys, max, handleClick, visuMode, countData,
+          studentsBelowTreshold} = props
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
@@ -111,7 +124,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
           )}
         </ComposedChart>
 
-        <div style={{position: "absolute", paddingLeft:`${chartWidth * 0.06}px`, pointerEvents: "none"}}>
+        <div style={{position: "absolute", paddingLeft:"99px", pointerEvents: "none"}}>
           <table style={{ fontSize: `${barWidth-2}px`,
                           textAlign: "center",
                           borderSpacing: "0px",
@@ -127,7 +140,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
 
               /** Math magic to calculate close enough spacing for table 
                * elements that show submission counts for each exercise: */
-              const totalWidth = chartWidth * 0.9
+              const totalWidth = chartWidth * 0.889
               const barCount = countData.length
               const barsWidth = barCount * barWidth
               const totalWidthAfterBars = totalWidth - barsWidth
@@ -136,7 +149,7 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
               const additionalPadding = Math.round(barCount / leftovers)
               const additionalLeftovers = Math.floor(leftovers - barCount / additionalPadding) -2
 
-              const totalHeight = chartHeight * 0.85
+              const totalHeight = chartHeight * 0.86
               const cellHeight = totalHeight / submissionMapping.length
 
               // Create the table content:
@@ -249,6 +262,8 @@ const MultiChart = ({ chartWidth, chartHeight, data, commonData, axisNames, data
                        strokeDasharray="3 3" />
 
       </ComposedChart>
+
+      <MyRefLine myX={chartWidth*0.06+2 + (1 + studentsBelowTreshold)*(barWidth+4)}></MyRefLine>
     </div>
   )
 }

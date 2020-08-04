@@ -19,7 +19,7 @@ const CheckBoxMenu = ({options, handleClick, showAvg, showExpected}) => {
                      id={option}
                      defaultChecked={(option === 'Average') ? showAvg : showExpected}>
               </input>
-              <label htmlFor={option} style={labelStyle} >{option}</label>
+              <label htmlFor={option} style={labelStyle} >{option} progress</label>
               <br></br>
             </div>
           )
