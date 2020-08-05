@@ -175,13 +175,18 @@ const getCommitData = () => {
 
       const first_non_empty = response.data.hits.hits[0]._source.results.find(result => !result.student_id.includes("redacted"))
       const moduleMapping = getModuleMapping(first_non_empty.points.modules)
+      
       const results = moduleMapping.map((id, index) => { return { week: index + 1 } })
       const cumulativeResults = moduleMapping.map((id, index) => { return { week: index + 1 } })
+
+      const submissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
+      const cumulativeSubmissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
       response.data.hits.hits.forEach(hit => {
         hit._source.results.forEach(student => {
           if (!student.username.includes("redacted")) {
             
+            // Calculcate commit data (weekly & cumulative commit counts):
             const weeklyCommits = []
 
             results.forEach(weekObject => {
@@ -202,11 +207,37 @@ const getCommitData = () => {
               weekObject[student.student_id] = cumulativeCommits[parseInt(weekObject.week)-1]
             })
             
+            // Calculate submission data (weekly & cumulative submission counts):
+            const weeklySubmissions = []
+            
+            submissions.forEach(weekObject => {
+
+              const correctModule = student.points.modules.find(module => {
+                const moduleNumber = parseInt(module.name.slice(0, 2))
+                const weekNumber = parseInt(weekObject.week)
+                const correctWeek = moduleNumber === weekNumber
+                const realModule = module.exercises.length > 0 || module.id === 570
+                return correctWeek && realModule
+              })
+              const submissionCount = correctModule !== undefined ? correctModule.submission_count : 0
+              weekObject[student.student_id] = submissionCount
+              weeklySubmissions.push(submissionCount)
+            })
+
+            const cumulativeSubs = Object.keys(weeklySubmissions).map(key => {
+              return weeklySubmissions.slice(0, parseInt(key)+1).reduce((sum, val) => {
+                return sum + val
+              }, 0)
+            })
+
+            cumulativeSubmissions.forEach(weekObject => {
+              weekObject[student.student_id] = cumulativeSubs[parseInt(weekObject.week)-1]
+            })
           }
         })
       })
 
-      return [results, cumulativeResults]
+      return [results, cumulativeResults, submissions, cumulativeSubmissions]
     })
     .catch(someError => [[], []])
 

@@ -34,10 +34,12 @@ const ProgressTab = () => {
   const [ cumulativeExercises, setCumulativeExercises ] = useState([{name: "init"}])
   const [ weeklyCommits, setWeeklyCommits ] = useState([])
   const [ cumulativeCommits, setCumulativeCommits ] = useState([{name: "init"}])
+  const [ weeklySubmissions, setWeeklySubmissions ] = useState([])
+  const [ cumulativeSubmissions, setCumulativeSubmissions ] = useState([{name: "init"}])
 
-  const modes = ["points", "exercises", "commits"]
-  const [ displayedModes, setdisplayedModes ] = useState(["exercises", "commits"])
-  const [ selectedMode, setSelectedMode ] = useState("points")
+  const modes = ["points", "exercises", "commits", "submissions"]
+  const [ selectedMode, setSelectedMode ] = useState(modes[0])
+  const [ displayedModes, setdisplayedModes ] = useState(modes.filter(mode => mode !== selectedMode))
 
   const showableLines = ["Average", "Expected"]
   const [ showAvg, setShowAvg ] = useState(true)
@@ -85,10 +87,12 @@ const ProgressTab = () => {
       dataService
       .getCommitData()
       .then(response => {
-        const [weeklyComms, cumulativeComms] = response
+        const [weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs] = response
 
         setWeeklyCommits(weeklyComms)
         setCumulativeCommits(cumulativeComms)
+        setWeeklySubmissions(weeklySubs)
+        setCumulativeSubmissions(cumulativeSubs)
       })
     }, []
   )
@@ -134,6 +138,10 @@ const ProgressTab = () => {
     else if (newMode === "commits") {
       setDisplayedData(weeklyCommits)
       setDisplayedCumulativeData(cumulativeCommits)
+    }
+    else if (newMode === "submissions") {
+      setDisplayedData(weeklySubmissions)
+      setDisplayedCumulativeData(cumulativeSubmissions)
     }
     else {
       console.log("Selected unimplemented mode:", newMode);
