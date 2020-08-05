@@ -237,7 +237,10 @@ const getCommitData = () => {
         })
       })
 
-      return [results, cumulativeResults, submissions, cumulativeSubmissions]
+      return [calcWeeklyAvgs(results),
+              calcWeeklyAvgs(cumulativeResults),
+              calcWeeklyAvgs(submissions),
+              calcWeeklyAvgs(cumulativeSubmissions)]
     })
     .catch(someError => [[], []])
 
