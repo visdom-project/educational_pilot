@@ -1,6 +1,7 @@
 import React from 'react'
 import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
 import '../stylesheets/studentbar.css'
+import TresholdSelector from './TresholdSelector'
 
 const CustomLabel = (props) => {
   return (
@@ -47,11 +48,12 @@ const selectColor = (data, index, key) => {
     ( data.submissions[index] < 1 ? "white" : "#e65a67" )
 }
 
-const MyRefLine = ({myX}) => {
+const MyRefLine = () => {
   return (
     <div style={{ width: "2px", height: "64vh",
-                  position: "absolute", marginLeft: `${myX}px`,
-                  backgroundColor: "red", marginTop: "-70vh" }}
+                  position: "absolute", marginLeft: "0px",
+                  backgroundColor: "#4a76ff", marginTop: "-70vh",
+                  display: "None"}}
          id="treshold-line"></div>
   )
 }
@@ -60,7 +62,7 @@ const MultiChart = (props) => {
 
   const { chartWidth, chartHeight, data, commonData, axisNames,
           dataKeys, commonKeys, max, handleClick, visuMode, countData,
-          studentsBelowTreshold} = props
+          studentsBelowTreshold, updateTreshold, treshold } = props
 
   const tickCount = 10
   const ticks = Object.keys(new Array(tickCount).fill(0)).map(key => Math.floor(key * max/tickCount))
@@ -263,7 +265,13 @@ const MultiChart = (props) => {
 
       </ComposedChart>
 
-      <MyRefLine myX={chartWidth*0.06+2 + (1 + studentsBelowTreshold)*(barWidth+4)}></MyRefLine>
+      <MyRefLine />
+
+      <TresholdSelector handleTresholdChange={updateTreshold}
+                        chartWidth={chartWidth}
+                        treshold={treshold}
+                        title="Select treshold for lagging students"
+                        tresholdCount={studentsBelowTreshold}/>
     </div>
   )
 }

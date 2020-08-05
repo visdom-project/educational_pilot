@@ -4,7 +4,6 @@ import MultiChart from './StatusChart'
 import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentDetailView from './StudentDetailView'
-import TresholdSelector from './TresholdSelector'
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
@@ -136,18 +135,13 @@ const StatusTab = () => {
           setCommitData(commits)
           setStudentData(students)
 
+          // Select count data from correct week:
           const selected = (commits !== undefined && commits.length > 0) ?
-            commits[commits.findIndex(module => module.week === "01")]["data"]
+            commits[commits.findIndex(module => parseInt(module.week) === parseInt(selectedWeek))]["data"]
             : []
           setSelectedCountData(selected)
 
-          const requiredPts = (students[0] !== undefined) ? 
-            students[0].points.modules.find(module => module.exercises.length > 0).max_points * treshold
-            : -99
-          const studentCountBelowTreshold = selected
-            .filter(student => student.cumulativePoints < requiredPts)
-            .length
-          setStudentsBelowTreshold(studentCountBelowTreshold.length)
+         updateTreshold(treshold, undefined, commits)
         })
     }, []
   )
@@ -211,7 +205,7 @@ const StatusTab = () => {
     }
 
     if (newCountData !== undefined) {
-      changeTreshold(treshold, data[newWeek-1]["data"], newCountData)
+      updateTreshold(treshold, data[newWeek-1]["data"], newCountData)
     }
   }
 
@@ -236,39 +230,22 @@ const StatusTab = () => {
     })
   }
 
-  const changeTreshold = (newTreshold, selectedData, selectedCountD) => {
-
-    // Calculate how many students fall below required point count:
-    // TODO: Check that changing treshold works
+  const updateTreshold = (newTreshold, selectedData, selectedCountD) => {
 
     if (selectedData === undefined) { selectedData = selectedWeekData }
-    //console.log("countdata:", selectedCountD);
     if (selectedCountD === undefined) { selectedCountD = selectedCountData }
 
     setTreshold(newTreshold)
-    
+
     if (selectedData[0] !== undefined) {
+      
+      // Calculate how many students fall below required point count:
       const requiredPts = selectedData[0].maxPts * newTreshold
       const studentCountBelowTreshold = selectedCountD
         .filter(student => student.cumulativePoints < requiredPts)
         .length
 
-      //console.log("required points:", requiredPts, "students below requirement:", studentCountBelowTreshold);
-
-      setStudentsBelowTreshold(studentCountBelowTreshold.length)
-
-      console.log("new count:", studentCountBelowTreshold);
-
-      // Update line place:
-      const refLine = document.querySelector("#treshold-line")
-      if (refLine !== null) {
-        const studentBar = document.querySelectorAll("path.recharts-rectangle")[studentCountBelowTreshold]
-        const leftOffset = 98
-        refLine.style.marginLeft = `${studentBar.getBoundingClientRect().x - leftOffset}px`
-      }
-      else {
-        console.log("Reference line is null");
-      }
+      setStudentsBelowTreshold(studentCountBelowTreshold)
     }
   }
 
@@ -291,13 +268,9 @@ const StatusTab = () => {
                   axisNames={axisNames[selectedMode]} max={max}
                   handleClick={handleStudentClick}
                   visuMode={selectedMode} countData={selectedCountData}
-                  studentsBelowTreshold={studentsBelowTreshold}>
+                  studentsBelowTreshold={studentsBelowTreshold}
+                  updateTreshold={updateTreshold} treshold={treshold}>
       </MultiChart>
-
-      <TresholdSelector handleTresholdChange={changeTreshold}
-                        chartWidth={chartWidth}
-                        treshold={treshold}
-                        title="Select treshold for lagging students"/>
 
       <StudentDetailView selectedStudentID={selectedStudent} students={studentData}></StudentDetailView>
     </>
