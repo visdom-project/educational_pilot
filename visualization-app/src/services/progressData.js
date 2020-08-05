@@ -1,5 +1,6 @@
 import axios from 'axios'
-const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
+
+const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
 
 const getModuleMapping = (modules) => {
 
@@ -166,4 +167,50 @@ const getStudentIds = (data) => {
   return list
 }
 
-export default { getStudentIds, getData };
+const getCommitData = () => {
+
+  const request = axios
+    .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
+    .then((response) => {
+
+      const first_non_empty = response.data.hits.hits[0]._source.results.find(result => !result.student_id.includes("redacted"))
+      const moduleMapping = getModuleMapping(first_non_empty.points.modules)
+      const results = moduleMapping.map((id, index) => { return { week: index + 1 } })
+      const cumulativeResults = moduleMapping.map((id, index) => { return { week: index + 1 } })
+
+      response.data.hits.hits.forEach(hit => {
+        hit._source.results.forEach(student => {
+          if (!student.username.includes("redacted")) {
+            
+            const weeklyCommits = []
+
+            results.forEach(weekObject => {
+              const index = student.commits.findIndex(module => 
+                (module.moduleName === "01-14" ? 14 : parseInt(module.module_name)) === parseInt(weekObject.week))
+              const commitSum = index < 0 ? 0 : student.commits[index].projects.reduce((sum, project) => sum + project.commit_count, 0)
+              weekObject[student.student_id] = commitSum
+              weeklyCommits.push(commitSum)
+            })
+
+            const cumulativeCommits = Object.keys(weeklyCommits).map(key => {
+              return weeklyCommits.slice(0, parseInt(key)+1).reduce((sum, val) => {
+                return sum + val
+              }, 0)
+            })
+
+            cumulativeResults.forEach(weekObject => {
+              weekObject[student.student_id] = cumulativeCommits[parseInt(weekObject.week)-1]
+            })
+            
+          }
+        })
+      })
+
+      return [results, cumulativeResults]
+    })
+    .catch(someError => [[], []])
+
+  return request
+}
+
+export default { getStudentIds, getData, getCommitData };

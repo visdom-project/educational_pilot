@@ -32,6 +32,8 @@ const ProgressTab = () => {
   const [ cumulativePoints, setCumulativePoints ] = useState([{name: "init"}])
   const [ weeklyExercises, setWeeklyExercises ] = useState([])
   const [ cumulativeExercises, setCumulativeExercises ] = useState([{name: "init"}])
+  const [ weeklyCommits, setWeeklyCommits ] = useState([])
+  const [ cumulativeCommits, setCumulativeCommits ] = useState([{name: "init"}])
 
   const modes = ["points", "exercises", "commits"]
   const [ displayedModes, setdisplayedModes ] = useState(["exercises", "commits"])
@@ -78,6 +80,19 @@ const ProgressTab = () => {
     }, []
   )
 
+  useEffect(
+    () => {
+      dataService
+      .getCommitData()
+      .then(response => {
+        const [weeklyComms, cumulativeComms] = response
+
+        setWeeklyCommits(weeklyComms)
+        setCumulativeCommits(cumulativeComms)
+      })
+    }, []
+  )
+
   // Toggle selection of a student that is clicked in the student list:
   const handleListClick = (id) => {
     const targetNode = document.querySelector(`#li-${id}`)
@@ -103,9 +118,7 @@ const ProgressTab = () => {
   }
 
   const handleModeClick = (newMode) => {
-    if (selectedMode === newMode) {
-      return
-    }
+    if (selectedMode === newMode) { return }
     
     setSelectedMode(newMode)
     setdisplayedModes(modes.filter(name => name !== newMode))
@@ -118,9 +131,12 @@ const ProgressTab = () => {
       setDisplayedData(weeklyExercises)
       setDisplayedCumulativeData(cumulativeExercises)
     }
+    else if (newMode === "commits") {
+      setDisplayedData(weeklyCommits)
+      setDisplayedCumulativeData(cumulativeCommits)
+    }
     else {
-      // TODO:
-      console.log("todo: selected unimplemented mode:", newMode);
+      console.log("Selected unimplemented mode:", newMode);
     }
   }
 
@@ -143,7 +159,7 @@ const ProgressTab = () => {
       <StudentSelector students={studentIds} handleClick={handleListClick} />
 
       <div className="fit-row">
-        <h2>{'Weekly Points'}</h2>
+        <h2>{`Weekly ${selectedMode}`}</h2>
         <Controls handleClick={handleModeClick}
                   modes={displayedModes} selectedMode={selectedMode}
                   showableLines={showableLines}
@@ -176,7 +192,7 @@ const ProgressTab = () => {
 
       </LineChart>
 
-      <h2>{'Cumulative Weekly Points'}</h2>
+      <h2>{`Cumulative weekly ${selectedMode}`}</h2>
       
       <LineChart className="intendedChart"
                  width={chartWidth} height={chartHeight+selectorHeight}
