@@ -81,7 +81,8 @@ const formatSubmissionData = (data) => {
       const newStudent = {
         id: student.id,
         submissions: student.weeklySubmissions[week.week],
-        passed: student.weeklyPassed[week.week]
+        passed: student.weeklyPassed[week.week],
+        cumulativePoints: student.cumulativePoints[week.week-1]
       }
 
       let i = 0
@@ -139,7 +140,12 @@ const getData = () => {
             submissionData.push({
               id: result.student_id,
               weeklySubmissions: weeklySubmissions,
-              weeklyPassed: weeklyPassed
+              weeklyPassed: weeklyPassed,
+              cumulativePoints:
+                Object.keys(Object.values(weeklies))
+                  .map(key => Object.values(weeklies)
+                      .slice(0, key+1)
+                      .reduce((sum, val) => sum + val, 0))
             })
           }
         })
@@ -147,7 +153,7 @@ const getData = () => {
 
       const [progress, commons] = formatProgressData(results)
 
-      return [progress, commons, formatSubmissionData(submissionData)]
+      return [progress, commons, helpers.orderCountData(formatSubmissionData(submissionData))]
     })
     .catch(someError => [[], []])
 
