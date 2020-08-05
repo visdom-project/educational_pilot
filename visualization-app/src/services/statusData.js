@@ -329,9 +329,9 @@ const getCommitData = () => {
           const modulePoints = result.points.modules
             .filter(module => module.max_points > 0 || module.id === 570)
             .map(module => module.points)
-
+          
           const cumulativePoints = Object.keys(modulePoints).map(key => {
-            return modulePoints.slice(0, key+1).reduce((sum, val) => {
+            return modulePoints.slice(0, parseInt(key)+1).reduce((sum, val) => {
               return sum + val
             }, 0)
           })
