@@ -151,15 +151,15 @@ const parseStudentData = (studentData) => {
 
 const StudentDetailView = ({selectedStudentID, students}) => {
   
-  if (selectedStudentID !== "") {
+  const title = "Exercise completion details"
+
+  if (selectedStudentID !== "" && students.length > 0) {
     const studentData = parseStudentData(students.find(student => student.student_id === selectedStudentID))
 
     return (
       <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
-        <h2>{'Student Details'}</h2>
+        <h2>{title}</h2>
         <h3><strong>{studentData.email}</strong>, {selectedStudentID}</h3>
-        
-        <h3>Exercises:</h3>
         <PointsDisplay data={studentData.points}></PointsDisplay>
       </div>
     )
@@ -167,7 +167,7 @@ const StudentDetailView = ({selectedStudentID, students}) => {
   else {
     return (
       <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
-        <h2>{'Student Details'}</h2>
+        <h2>{title}</h2>
         <div className="intended">Click a student to view details.</div>
       </div>
     )
