@@ -10,23 +10,12 @@ const StudentTab = () => {
   const modes = ["points", "exercises", "submissions", "commits"]
   const [ selectedMode, setSelectedMode ] = useState(modes[0])
 
-  // TODO: Remove hard coding:
-  const [ weeks, setWeeks ] = useState([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16])
-  const [ selectedWeek, setSelectedWeek ] = useState(1)
-
-  const handleModeSwitch = (newMode) => {
-    setSelectedMode(newMode)
-  }
-
-  const handleWeekSwitch = (newWeek) => {
-    setSelectedWeek(newWeek)
-  }
+  const handleModeSwitch = (newMode) => setSelectedMode(newMode)
 
   return (
     <>
       <h2>{'Weekly course status'}</h2>
       <StudentStatusChart handleModeSwitch={handleModeSwitch} modes={modes} selectedMode={selectedMode}
-                          handleWeekSwitch={handleWeekSwitch} weeks={weeks} selectedWeek={selectedWeek}
                           selectedStudentID={selectedStudentID}/>
 
       <h2>{'Progress over the course'}</h2>

@@ -22,11 +22,12 @@ const Controls = (props) => {
   )
 }
 
-const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode,
-                              handleWeekSwitch, weeks, selectedWeek,
-                              selectedStudentID }) => {
+const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode, selectedStudentID }) => {
 
   const [ studentData, setStudentData ] = useState([])
+  
+  const [ weeks, setWeeks ] = useState([])
+  const [ selectedWeek, setSelectedWeek ] = useState(1)
 
   useEffect(
     () => {
@@ -48,10 +49,18 @@ const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode,
           })
         })
 
+        // TODO: Remove hard coding:
+        const availableWeeks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
+        setWeeks(availableWeeks)
+
         setStudentData(results)
       })
   }, []
   )
+
+  const handleWeekSwitch = (newWeek) => {
+    setSelectedWeek(newWeek)
+  }
 
   return (
     <div className="intended" style={{display: "flex", flexDirection:"column"}}>
