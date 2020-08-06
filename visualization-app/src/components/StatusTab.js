@@ -47,7 +47,6 @@ const Controls = (props) => {
 
 const StatusTab = () => {
 
-  const [ studentData, setStudentData ] = useState([])
   const [ progressData, setProgressData ] = useState([])
   const [ commonData, setCommonData ]  = useState([])
   const [ submissionData, setSubmissionData ] = useState([])
@@ -133,7 +132,6 @@ const StatusTab = () => {
           const [commits, students] = response
 
           setCommitData(commits)
-          setStudentData(students)
 
           // Select count data from correct week:
           const selected = (commits !== undefined && commits.length > 0) ?
@@ -272,7 +270,7 @@ const StatusTab = () => {
                   updateTreshold={updateTreshold} treshold={treshold}>
       </MultiChart>
 
-      <StudentDetailView selectedStudentID={selectedStudent} students={studentData}></StudentDetailView>
+      <StudentDetailView selectedStudentID={selectedStudent}></StudentDetailView>
     </>
   )
 }

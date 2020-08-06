@@ -1,4 +1,5 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
+import dataService from '../services/studentData'
 
 const parseName = (name) => {
   const index = name.indexOf("|fi:")
@@ -149,8 +150,21 @@ const parseStudentData = (studentData) => {
   return studentData
 }
 
-const StudentDetailView = ({selectedStudentID, students}) => {
+const StudentDetailView = ({selectedStudentID}) => {
   
+  const [ students, setStudents ] = useState([])
+
+  useEffect(
+    () => {
+      dataService
+        .getCommitData()
+        .then(response => {
+          const [commits, students] = response
+
+          setStudents(students)
+        })
+  }, [])
+
   const title = "Exercise completion details"
 
   if (selectedStudentID !== "" && students.length > 0) {
