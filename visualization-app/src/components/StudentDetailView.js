@@ -157,11 +157,9 @@ const StudentDetailView = ({selectedStudentID}) => {
   useEffect(
     () => {
       dataService
-        .getCommitData()
+        .getStudentData()
         .then(response => {
-          const [commits, students] = response
-
-          setStudents(students)
+          setStudents(response)
         })
   }, [])
 

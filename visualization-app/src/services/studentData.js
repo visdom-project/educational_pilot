@@ -1,38 +1,10 @@
 import axios from 'axios'
-import helpers from './helpers'
 
-const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
-
-/*const getData = () => {
+const getStudentData = () => {
 
   const request = axios
-    .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
-    .then((response) => {
-
-      const results = []
-
-      // Map student data into weeks:
-      response.data.hits.hits.forEach(hit => {
-        hit._source.results.forEach(student => {
-          if (!student.username.includes("redacted")) {
-
-            results.push(student)
-
-          }
-        })
-      })
-
-      return results
-    })
-    .catch(someError => [[], []])
-
-  return request
-}*/
-
-const getCommitData = () => {
-
-  const request = axios
-    .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
+    .get( 'http://localhost:9200/gitlab-course-40-commit-data/_search',
+          {Accept: 'application/json', 'Content-Type': 'application/json' })
     .then((response) => {
 
       // TODO: remove hard-coding from this mapping of modules and corresponding project names:
@@ -112,38 +84,14 @@ const getCommitData = () => {
 
           result.commits = newCommits
           studentData.push(result)
-
-          // Map each student's commit data to correct weeks in result data:
-          result.commits.forEach(module => {
-            const moduleInd = module.module_name === "01-14" ? 14 : (parseInt(module.module_name)-1)
-
-            // Format student data into displayable format:
-            const student = {
-              id: result.student_id,
-              commit_counts: module.projects.map(project => project.commit_count),
-              project_names: module.projects.map(project => project.name),
-              passed: passedExercises[moduleInd],
-              weekPts: modulePoints[moduleInd],
-              cumulativePoints: cumulativePoints[moduleInd]
-            }
-
-            // Separate commit counts to their own fields:
-            let i = 1
-            student.commit_counts.forEach(commit_count => {
-              student[`exercise-${i}`] = i
-              i += 1
-            })
-
-            results[results.findIndex(week => week.week === module.module_name)].data.push(student)
-          })
         })
       })
 
-      return [helpers.orderCountData(results), studentData]
+      return studentData
     })
     .catch(someError => [[], []])
 
   return request
 }
 
-export default { /*getData,*/ getCommitData };
+export default { getStudentData };

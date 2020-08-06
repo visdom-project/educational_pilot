@@ -321,8 +321,6 @@ const getCommitData = () => {
         return {"week": moduleName, data: []}
       })
 
-      const studentData = []
-
       // Parse fetched commit data into proper format and fill in missing data:
       response.data.hits.hits.forEach(hit => {
         hit._source.results.forEach(result => {
@@ -374,7 +372,6 @@ const getCommitData = () => {
           })
 
           result.commits = newCommits
-          studentData.push(result)
 
           // Map each student's commit data to correct weeks in result data:
           result.commits.forEach(module => {
@@ -402,7 +399,7 @@ const getCommitData = () => {
         })
       })
 
-      return [helpers.orderCountData(results), studentData]
+      return helpers.orderCountData(results)
     })
     .catch(someError => [[], []])
 

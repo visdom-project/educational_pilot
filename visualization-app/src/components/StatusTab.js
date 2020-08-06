@@ -129,7 +129,7 @@ const StatusTab = () => {
       dataService
         .getCommitData()
         .then(response => {
-          const [commits, students] = response
+          const commits = response
 
           setCommitData(commits)
 
