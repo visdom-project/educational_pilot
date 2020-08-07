@@ -244,7 +244,12 @@ def parse_empty_fields(json_data):
 
         module["points_by_difficulty"] = new_dict
 
-    return json_data
+    new_modules = []
+    for module in json_data:
+        if len(module["exercises"]) > 0 or module['id'] in [352]:
+            new_modules.append(module)
+
+    return new_modules
 
 
 def write_students(course_students_url, plussa_api_key, course_id, course_instance, page_id):
@@ -255,36 +260,54 @@ def write_students(course_students_url, plussa_api_key, course_id, course_instan
     student_list_reply = fetch_api_to_ES(course_students_url, plussa_api_key, "", 0, write_to_es=False)
     if student_list_reply == False:
         return False
-
-    if course_instance["instance_name"] == "summer-2020":   ## Handling GDPR.
-        user_ids_of_agreed = get_agreements(plussa_api_key)
+    else:
+    #if course_instance["instance_name"] == "summer-2020":   ## Handling GDPR.
+    #    user_ids_of_agreed = get_agreements(plussa_api_key)
 
         # Fetch point data for each student and write it to the student list:
         for student in student_list_reply["results"]:
 
-            if student["student_id"] in user_ids_of_agreed:
+            # Redact student data:
+            for key in ["url", "username", "student_id", "email"]:
+                student[key] = "redacted_due_to_no_research_permission"
+            student["is_external"] = False
+
+            student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", 0, write_to_es=False)
+            if student_points_reply == False:
+                return False
+            
+            student_points_reply['points_by_difficulty'] = {}
+            student_points_reply['modules'] = parse_empty_fields(student_points_reply["modules"])
+
+            # Redact identifying data from points reply:
+            for key in ["url", "username", "student_id", "email"]:
+                student_points_reply[key] = "redacted_due_to_no_research_permission"
+            student_points_reply["is_external"] = False
+
+            student['points'] = student_points_reply
+    #        if student["student_id"] in user_ids_of_agreed:
 
                 # Fetch point data:
-                student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", 0, write_to_es=False)
-                if student_points_reply == False:
-                    return False
+    #            student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", 0, write_to_es=False)
+    #            if student_points_reply == False:
+    #                return False
 
-                print("Remove some data: field: points_by_difficulty")
-                student_points_reply["points_by_difficulty"] = {}
-                student_points_reply["modules"] = parse_empty_fields(student_points_reply["modules"])
+    #            print("Remove some data: field: points_by_difficulty")
+    #            student_points_reply["points_by_difficulty"] = {}
+    #            student_points_reply["modules"] = parse_empty_fields(student_points_reply["modules"])
 
                 # Append point data to student info:
-                student["points"] = student_points_reply
+    #            student["points"] = student_points_reply
             
-            else:
-                # Redact student data:
-                for key in ["url", "username", "student_id", "email", "data"]:
-                    student[key] = "redacted_due_to_no_research_permission"
-                student["is_external"] = False
-                student["points"] = {}
-    else:
-        print("Can't save student data before implementing anonymization!")
-        student_list_reply["results"] = ["Redacted data"]
+    #        else:
+    #            # Redact student data:
+    #            for key in ["url", "username", "student_id", "email", "data"]:
+    #                student[key] = "redacted_due_to_no_research_permission"
+    #            student["is_external"] = False
+    #            student["points"] = {}
+    #else:
+    #    print("Can't save student data before implementing anonymization!")
+    #    student_list_reply["results"] = ["Redacted data"]
         
         # TODO: Anonymize student data
         # Fetch point data for each student and write it to the student list:
@@ -306,7 +329,7 @@ def write_students(course_students_url, plussa_api_key, course_id, course_instan
     return student_list_reply["next"]
 
 
-def get_plussa_data(api_url, api_key):
+def get_plussa_data(api_url, api_key, course_id_to_fetch):
 
     # 2. Get Plussa API root contents:
     plussa_root_reply = fetch_api_to_ES(api_url, api_key, "plussa-root", 0)
@@ -324,12 +347,17 @@ def get_plussa_data(api_url, api_key):
     # 4. Fetch data for courses:
     for course_instance in plussa_courselist_reply["results"]:
 
+        if course_instance['id'] == course_id_to_fetch:
+            print("course instance:", course_instance)
+            print()
+
         # Only parse instances of the course: "Programming 2: Basics"
-        if "Ohjelmointi 2:" in course_instance["name"]:
+        #if "Ohjelmointi 2:" in course_instance["name"]:
 
             # Get course API url and id:
             course_instance_url = course_instance["url"]
-            course_id = course_instance["id"]
+            #course_id = course_instance["id"]
+            course_id = course_id_to_fetch
 
             # 5. Get course details from Plussa Course Instance API:
             course_details_reply = fetch_api_to_ES(course_instance_url, api_key, "plussa-course-{:d}".format(course_id), 0)
@@ -532,50 +560,55 @@ def parse_commits(module_tree):
     return new_tree
 
 
-
 def main():
 
     # TODO: Remove excess modules from Plussa data before writing into ES-cluster
+
+    SPRING_COURSE_ID = 30
+    SUMMER_COURSE_ID = 40
+    SELECTED_COURSE_ID = SPRING_COURSE_ID
 
     # Read access tokens, api names and URLs:
     secrets = read_secrets()
     #print(secrets)
 
     # 1. Get root api parameters:
-    #plussa_api_url = secrets["plussa"]["API urls"]["plussa-root"]
+    plussa_api_url = secrets["plussa"]["API urls"]["plussa-root"]
     plussa_api_key = secrets["plussa"]["API keys"]["plussa"]
 
     # Fetch data from plussa into ElasticSearch cluster:
-    #get_plussa_data(plussa_api_url, plussa_api_key)
+    get_plussa_data(plussa_api_url, plussa_api_key, SELECTED_COURSE_ID)
 
     # Get root api parameters for git:
     gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
     gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
 
-    students_reply = search_elasticsearch("plussa-course-40-students")
+    students_reply = search_elasticsearch("plussa-course-{:d}-students".format(SELECTED_COURSE_ID))
     if students_reply == False:
         return False
     else:
         students_reply = json.loads(students_reply)
     
+    #print("reply", students_reply)
+
     all_commit_data = []
 
-    for hits in students_reply['hits']['hits']:
-        for student in hits['_source']['results']:
-            if "redacted" not in student['url']:
+    #for hits in students_reply['hits']['hits']:
+    #    for student in hits['_source']['results']:
+    #        if "redacted" not in student['url']:
 
-                git_url = find_git_url(student, plussa_api_key)
+    #            git_url = find_git_url(student, plussa_api_key)
 
-                print("Fetching commit data for git repo:", git_url)
-                student_module_tree = get_module_tree(git_url, gitlab_api_key, gitlab_api_url)
+    #            print("Fetching commit data for git repo:", git_url)
+    #            student_module_tree = get_module_tree(git_url, gitlab_api_key, gitlab_api_url)
 
-                student["commits"] = parse_commits(student_module_tree)
+    #            student["commits"] = parse_commits(student_module_tree)
 
-                all_commit_data.append(student)
+    #            all_commit_data.append(student)
 
-    print("Writing data to ES:")
-    reply = write_to_elasticsearch(json.dumps({"results": all_commit_data}), "gitlab-course-40-commit-data", '_doc', 4)
-    print(reply)
+    #print("Writing data to ES:")
+    #reply = write_to_elasticsearch(json.dumps({"results": all_commit_data}), "gitlab-course-{:d}-commit-data".format(SELECTED_COURSE_ID), '_doc', 4)
+    #print(reply)
 
 
 main()
