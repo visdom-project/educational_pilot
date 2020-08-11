@@ -417,7 +417,7 @@ def find_git_url(student, access_token):
 
 
 def get_commits_for_file(gitlab_api_url, encoded, full_path, gitlab_api_key):
-    encoded_full_path = full_path.replace("/", "%2F").replace(" ", "%20").replace("(", "%28").replace(")", "%29")
+    encoded_full_path = full_path.replace("/", "%2F").replace(" ", "%20").replace("(", "%28").replace(")", "%29").replace("ä", "%C3%A4").replace("ö", "%C3%B6")
     url = "{:s}/{:s}/repository/files/{:s}/blame?ref=master".format(gitlab_api_url, encoded, encoded_full_path)
 
     blame_reply = make_get_request(url, gitlab_api_key, ["Private-Token: {:s}".format(gitlab_api_key)], "")
@@ -470,7 +470,8 @@ def get_module_tree(git_url, gitlab_api_key, gitlab_api_url):
 
         paths_reply = make_get_request(tree_url, gitlab_api_key, ["Private-Token: {:s}".format(gitlab_api_key)], "")
 
-        if paths_reply == False:
+        if paths_reply == False or "message" in paths_reply:
+            print("Could not fetch data for {:s}. Might be due to missing privileges.".format(tree_url))
             return module_tree
         else:
             paths_reply = json.loads(paths_reply)
@@ -485,6 +486,10 @@ def get_module_tree(git_url, gitlab_api_key, gitlab_api_url):
             paths.append(full_path)
 
             if "build" in full_path or "Debug" in full_path or "READ" in full_path:
+                continue
+
+            # Week subdirectory name must start with a number:
+            if len(full_path.split("/")) > 1 and not full_path.split("/")[1][0].isdigit():
                 continue
 
             name = path['name']
@@ -510,6 +515,8 @@ def get_module_tree(git_url, gitlab_api_key, gitlab_api_url):
                     #file_name = file_name.replace(".", "DOT")
 
                     project = split[2]
+                    if "." in project:
+                        continue
 
                     # TODO: Speed-optimization; fetch project-wise commit data by using urls of format:
                     # https://course-gitlab.tuni.fi/api/v4/projects/<ProjectID>/-/commits/master/student%2F<FolderName>%2F<ProjectName>
@@ -560,6 +567,33 @@ def parse_commits(module_tree):
     return new_tree
 
 
+def parse_no_commits(module_tree):
+    
+    new_module_tree = []
+
+    for module in module_tree:
+
+        new_module = {}
+        
+        new_module['module_name'] = "0{:s}".format(module['name'][0:1]) if '.' in module['name'][0:2] else module['name'][0:2]
+        if module['name'] == "01-14":
+            new_module['module_name'] = '14'
+
+        projects = []
+        for exercise in module['exercises']:
+            new_project = {}
+            new_project['name'] = exercise['name']
+            new_project['commit_count'] = 0
+            new_project['commit_meta'] = []
+            projects.append(new_project)
+
+        new_module['projects'] = projects
+        
+        new_module_tree.append(new_module)
+
+    return new_module_tree
+
+
 def main():
 
     # TODO: Remove excess modules from Plussa data before writing into ES-cluster
@@ -577,7 +611,7 @@ def main():
     plussa_api_key = secrets["plussa"]["API keys"]["plussa"]
 
     # Fetch data from plussa into ElasticSearch cluster:
-    get_plussa_data(plussa_api_url, plussa_api_key, SELECTED_COURSE_ID)
+    #get_plussa_data(plussa_api_url, plussa_api_key, SELECTED_COURSE_ID)
 
     # Get root api parameters for git:
     gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
@@ -588,27 +622,31 @@ def main():
         return False
     else:
         students_reply = json.loads(students_reply)
-    
-    #print("reply", students_reply)
 
-    all_commit_data = []
+    index = 10
+    for hits in students_reply['hits']['hits'][5:]:
+        all_commit_data = []
 
-    #for hits in students_reply['hits']['hits']:
-    #    for student in hits['_source']['results']:
-    #        if "redacted" not in student['url']:
+        for divisions in [(0, 50), (50, 99)]:
+            for student in hits['_source']['results'][divisions[0]:divisions[1]]:
 
-    #            git_url = find_git_url(student, plussa_api_key)
+                git_url = find_git_url(student, plussa_api_key)
+                
+                if git_url != False:
+                    print("Fetching commit data for git repo:", git_url)
+                    student_module_tree = parse_commits(get_module_tree(git_url, gitlab_api_key, gitlab_api_url))
+                else:
+                    student_module_tree = parse_no_commits(student['points']['modules'])
 
-    #            print("Fetching commit data for git repo:", git_url)
-    #            student_module_tree = get_module_tree(git_url, gitlab_api_key, gitlab_api_url)
+                if len(student_module_tree) > 0:
+                    student["commits"] = student_module_tree
 
-    #            student["commits"] = parse_commits(student_module_tree)
+                all_commit_data.append(student)
 
-    #            all_commit_data.append(student)
-
-    #print("Writing data to ES:")
-    #reply = write_to_elasticsearch(json.dumps({"results": all_commit_data}), "gitlab-course-{:d}-commit-data".format(SELECTED_COURSE_ID), '_doc', 4)
-    #print(reply)
+            print("Writing data to ES:")
+            reply = write_to_elasticsearch(json.dumps({"results": all_commit_data}), "gitlab-course-{:d}-commit-data".format(SELECTED_COURSE_ID), '_doc', index)
+            print(reply)
+            index += 1
 
 
 main()
