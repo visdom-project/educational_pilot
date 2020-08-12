@@ -7,7 +7,7 @@ const getModuleMapping = (modules) => {
 
   const corrects = []
   modules.forEach(module => {
-    if (module.max_points > 0 || module.id === 570) { // Hard coding: ID 570 is a special case: git-course-module that has no points in Programming 2.
+    if (module.exercises.length > 0 || module.id === 570) { // Hard coding: ID 570 is a special case: git-course-module that has no points in Programming 2.
       let module_number = module.name.slice(0, 2)
       if (module_number[1] === ".") {
         module_number = module_number[0]
@@ -138,23 +138,37 @@ const getData = () => {
         exerciseResultsCumulative.push(exerciseWeekCumulatively)
       })
 
-      historyDataService
+      // Parse commit data:
+      const [weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs]
+        = getCommitData(response, moduleMapping)
+
+      // Add history data to data set:
+      return historyDataService
         .getHistoryData()
         .then(response => {
           const historyByWeeks = response
           Object.keys(historyByWeeks).forEach(weekName => {
+            // Add historical average cumulative weekly point counts:
             let index = 0
             historyByWeeks[weekName].avg_cum_points.forEach(gradePoints => {
               resultsCumulative[parseInt(weekName)][`avg_points_grade_${index}`] = gradePoints
               index += 1
             })
+            
+            // Add historical average cumulative weekly commit counts:
+            index = 0
+            historyByWeeks[weekName].avg_cum_commits.forEach(gradeCommits => {
+              cumulativeComms[parseInt(weekName)][`avg_commits_grade_${index}`] = gradeCommits
+              index += 1
+            })
           })
-        })
 
-      return [calcWeeklyAvgs(results),
-              calcWeeklyAvgs(resultsCumulative),
-              calcWeeklyAvgs(exerciseResults),
-              calcWeeklyAvgs(exerciseResultsCumulative)]
+          return [calcWeeklyAvgs(results),
+            calcWeeklyAvgs(resultsCumulative),
+            calcWeeklyAvgs(exerciseResults),
+            calcWeeklyAvgs(exerciseResultsCumulative),
+            weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs]
+        })
     })
     .catch(someError => [[], []])
 
@@ -181,84 +195,73 @@ const getStudentIds = (data) => {
   return list
 }
 
-const getCommitData = () => {
+const getCommitData = (response, moduleMapping) => {
 
-  const request = axios
-    .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
-    .then((response) => {
+  const results = moduleMapping.map((id, index) => { return { week: index + 1 } })
+  const cumulativeResults = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
-      const first_non_empty = response.data.hits.hits[0]._source.results.find(result => !result.student_id.includes("redacted"))
-      const moduleMapping = getModuleMapping(first_non_empty.points.modules)
-      
-      const results = moduleMapping.map((id, index) => { return { week: index + 1 } })
-      const cumulativeResults = moduleMapping.map((id, index) => { return { week: index + 1 } })
+  const submissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
+  const cumulativeSubmissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
-      const submissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
-      const cumulativeSubmissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
+  response.data.hits.hits.forEach(hit => {
+    hit._source.results.forEach(student => {
+      if (!student.username.includes("redacted")) {
+        
+        // Calculcate commit data (weekly & cumulative commit counts):
+        const weeklyCommits = []
 
-      response.data.hits.hits.forEach(hit => {
-        hit._source.results.forEach(student => {
-          if (!student.username.includes("redacted")) {
-            
-            // Calculcate commit data (weekly & cumulative commit counts):
-            const weeklyCommits = []
-
-            results.forEach(weekObject => {
-              const index = student.commits.findIndex(module => 
-                (module.moduleName === "01-14" ? 14 : parseInt(module.module_name)) === parseInt(weekObject.week))
-              const commitSum = index < 0 ? 0 : student.commits[index].projects.reduce((sum, project) => sum + project.commit_count, 0)
-              weekObject[student.student_id] = commitSum
-              weeklyCommits.push(commitSum)
-            })
-
-            const cumulativeCommits = Object.keys(weeklyCommits).map(key => {
-              return weeklyCommits.slice(0, parseInt(key)+1).reduce((sum, val) => {
-                return sum + val
-              }, 0)
-            })
-
-            cumulativeResults.forEach(weekObject => {
-              weekObject[student.student_id] = cumulativeCommits[parseInt(weekObject.week)-1]
-            })
-            
-            // Calculate submission data (weekly & cumulative submission counts):
-            const weeklySubmissions = []
-            
-            submissions.forEach(weekObject => {
-
-              const correctModule = student.points.modules.find(module => {
-                const moduleNumber = parseInt(module.name.slice(0, 2))
-                const weekNumber = parseInt(weekObject.week)
-                const correctWeek = moduleNumber === weekNumber
-                const realModule = module.exercises.length > 0 || module.id === 570
-                return correctWeek && realModule
-              })
-              const submissionCount = correctModule !== undefined ? correctModule.submission_count : 0
-              weekObject[student.student_id] = submissionCount
-              weeklySubmissions.push(submissionCount)
-            })
-
-            const cumulativeSubs = Object.keys(weeklySubmissions).map(key => {
-              return weeklySubmissions.slice(0, parseInt(key)+1).reduce((sum, val) => {
-                return sum + val
-              }, 0)
-            })
-
-            cumulativeSubmissions.forEach(weekObject => {
-              weekObject[student.student_id] = cumulativeSubs[parseInt(weekObject.week)-1]
-            })
-          }
+        results.forEach(weekObject => {
+          const index = student.commits.findIndex(module => 
+            (module.moduleName === "01-14" ? 14 : parseInt(module.module_name)) === parseInt(weekObject.week))
+          const commitSum = index < 0 ? 0 : student.commits[index].projects.reduce((sum, project) => sum + project.commit_count, 0)
+          weekObject[student.student_id] = commitSum
+          weeklyCommits.push(commitSum)
         })
-      })
 
-      return [calcWeeklyAvgs(results),
-              calcWeeklyAvgs(cumulativeResults),
-              calcWeeklyAvgs(submissions),
-              calcWeeklyAvgs(cumulativeSubmissions)]
+        const cumulativeCommits = Object.keys(weeklyCommits).map(key => {
+          return weeklyCommits.slice(0, parseInt(key)+1).reduce((sum, val) => {
+            return sum + val
+          }, 0)
+        })
+
+        cumulativeResults.forEach(weekObject => {
+          weekObject[student.student_id] = cumulativeCommits[parseInt(weekObject.week)-1]
+        })
+        
+        // Calculate submission data (weekly & cumulative submission counts):
+        const weeklySubmissions = []
+        
+        submissions.forEach(weekObject => {
+
+          const correctModule = student.points.modules.find(module => {
+            const moduleNumber = parseInt(module.name.slice(0, 2))
+            const weekNumber = parseInt(weekObject.week)
+            const correctWeek = moduleNumber === weekNumber
+            const realModule = module.exercises.length > 0 || module.id === 570
+            return correctWeek && realModule
+          })
+          const submissionCount = correctModule !== undefined ? correctModule.submission_count : 0
+          weekObject[student.student_id] = submissionCount
+          weeklySubmissions.push(submissionCount)
+        })
+
+        const cumulativeSubs = Object.keys(weeklySubmissions).map(key => {
+          return weeklySubmissions.slice(0, parseInt(key)+1).reduce((sum, val) => {
+            return sum + val
+          }, 0)
+        })
+
+        cumulativeSubmissions.forEach(weekObject => {
+          weekObject[student.student_id] = cumulativeSubs[parseInt(weekObject.week)-1]
+        })
+      }
     })
-    .catch(someError => [[], []])
+  })
 
-  return request
+  return [calcWeeklyAvgs(results),
+          calcWeeklyAvgs(cumulativeResults),
+          calcWeeklyAvgs(submissions),
+          calcWeeklyAvgs(cumulativeSubmissions)]
 }
 
-export default { getStudentIds, getData, getCommitData };
+export default { getStudentIds, getData };

@@ -65,7 +65,9 @@ const ProgressTab = () => {
       dataService
       .getData()
       .then(response => {
-        const [weeklyPts, cumulativePts, weeklyExers, cumulativeExers] = response
+        const [ weeklyPts, cumulativePts, weeklyExers, cumulativeExers,
+                weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs ]
+          = response
 
         setWeeklyPoints(weeklyPts)
         setCumulativePoints(cumulativePts)
@@ -78,16 +80,6 @@ const ProgressTab = () => {
 
         setDisplayedData(weeklyPts)
         setDisplayedCumulativeData(cumulativePts)
-      })
-    }, []
-  )
-
-  useEffect(
-    () => {
-      dataService
-      .getCommitData()
-      .then(response => {
-        const [weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs] = response
 
         setWeeklyCommits(weeklyComms)
         setCumulativeCommits(cumulativeComms)
