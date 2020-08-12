@@ -285,41 +285,6 @@ def write_students(course_students_url, plussa_api_key, course_id, course_instan
             student_points_reply["is_external"] = False
 
             student['points'] = student_points_reply
-    #        if student["student_id"] in user_ids_of_agreed:
-
-                # Fetch point data:
-    #            student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", 0, write_to_es=False)
-    #            if student_points_reply == False:
-    #                return False
-
-    #            print("Remove some data: field: points_by_difficulty")
-    #            student_points_reply["points_by_difficulty"] = {}
-    #            student_points_reply["modules"] = parse_empty_fields(student_points_reply["modules"])
-
-                # Append point data to student info:
-    #            student["points"] = student_points_reply
-            
-    #        else:
-    #            # Redact student data:
-    #            for key in ["url", "username", "student_id", "email", "data"]:
-    #                student[key] = "redacted_due_to_no_research_permission"
-    #            student["is_external"] = False
-    #            student["points"] = {}
-    #else:
-    #    print("Can't save student data before implementing anonymization!")
-    #    student_list_reply["results"] = ["Redacted data"]
-        
-        # TODO: Anonymize student data
-        # Fetch point data for each student and write it to the student list:
-        #for student in student_list_reply["results"]:
-
-            # Fetch point data:
-            #student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", False)
-            #if student_points_reply == False:
-            #    return False
-
-            # Append point data to student info:
-            #student["point_data"] = student_points_reply
 
     # 8. Write course student list with point data into the ES cluster:
     print("Writing course student list with point data into the ES cluster...")
@@ -350,9 +315,6 @@ def get_plussa_data(api_url, api_key, course_id_to_fetch):
         if course_instance['id'] == course_id_to_fetch:
             print("course instance:", course_instance)
             print()
-
-        # Only parse instances of the course: "Programming 2: Basics"
-        #if "Ohjelmointi 2:" in course_instance["name"]:
 
             # Get course API url and id:
             course_instance_url = course_instance["url"]
@@ -399,18 +361,6 @@ def find_git_url(student, access_token):
                     
                     submission_data = submission_reply['submission_data']
                     if submission_data is not None and len(submission_data) > 0 and len(submission_data[0]) > 1 and submission_data[0][0] == "git":
-                        
-                        git_url = submission_data[0][1]
-
-                        # This is how to deduct from submission reply the name of the exercise folder:
-                        #feedback = submission_reply['feedback']
-                        #index = feedback.find('-o main.o ')
-                        #feedback = feedback[index+9:]
-                        #index = feedback.find(' main.o')
-                        #feedback = feedback[:index]
-                        #index_of_last_space = len(feedback) - feedback[::-1].find(' ')
-                        #name = feedback[index_of_last_space:]
-
                         return submission_data[0][1]   # Found a git url
     
     return False
@@ -593,6 +543,98 @@ def parse_no_commits(module_tree):
 
     return new_module_tree
 
+from itertools import accumulate
+
+def aggregate_history_data_from_index(index_name):
+    # 1. fetch ES data from given index
+    # 2. Parse interesting results for each* student:
+        # 1) Calculate weekly point counts
+        # 2) Calculate course grade
+        # 3) Add weekly point sums into weekly point sums of given grade
+        # 4) Add +1 to student count of said grade
+    # *: If student is not dummy data point
+    
+    # TODO: 1. Fetch student data from given ElasticSearch index:
+    url = 'http://localhost:9200/{:s}/_search?pretty&size=20'.format(index_name)
+    reply = make_get_request(url, headers=['Content-Type: application/json'])
+
+    if reply != False:
+        reply = json.loads(reply)
+
+    student_counts = [0, 0, 0, 0, 0, 0]
+    data = {
+        "1":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "2":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "3":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "4":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "5":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "6":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "7":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "8":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "9":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "10": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "11": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "12": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "13": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "14": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
+        "15": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]}}
+
+    for hits in reply['hits']['hits']:
+        for student in hits['_source']['results']:
+            if "commits" in student.keys() and (len(student["commits"]) != 15 or student['commits'][0]['projects'][0]['name'] != "1.6.1.1 |fi:Eka palautus|en:First submission|"):
+                weekly_points = []
+                weekly_commits = []
+                course_grade = -1
+                
+                # 1) Calculate weekly point counts:
+                weekly_points = [module['points'] for module in student['points']['modules']]
+                while len(weekly_points) < 16:
+                    weekly_points.append(0)
+
+                # Calculate weekly commit counts:
+                for module in student['commits']:
+                    commit_count = 0
+                    for project in module['projects']:
+                        commit_count += project['commit_count']
+                    
+                    weekly_commits.append(commit_count)
+                # Make the list of correct length:
+                while len(weekly_commits) < 16:
+                    weekly_commits.append(0)
+
+                # Calculate cumulative points and commits:
+                cumulative_points = list(accumulate(weekly_points))
+                cumulative_commits = list(accumulate(weekly_commits))
+
+                # 2) TODO: Calculate course grade:
+                for treshold in [0, 401, 425, 575, 680, 785]:
+                    course_grade += 0 if cumulative_points[-1] < treshold else 1
+                
+                # 3) Add +1 to student count of said grade:
+                student_counts[course_grade] += 1
+
+                 # 3) Add weekly sums into weekly sums of the given grade:
+                for week in data:
+                    data[week]['points'][course_grade] += cumulative_points[int(week)-1]
+                    data[week]['commits'][course_grade] += cumulative_commits[int(week)-1]
+
+    avg_point_data = []
+    avg_commit_data = []
+    # Calculate averages for each week and grade:
+    for week in data.values():
+
+        avg_points = [0, 0, 0, 0, 0, 0]
+        avg_commits = [0, 0, 0, 0, 0, 0]
+        
+        for i in range(0, 6):
+            avg_points[i] = week['points'][i] / student_counts[i]
+            avg_commits[i] = week['commits'][i] / student_counts[i]
+
+        avg_point_data.append(avg_points)
+        avg_commit_data.append(avg_commits)
+        
+    return data, avg_point_data, avg_commit_data, student_counts
+
 
 def main():
 
@@ -604,49 +646,32 @@ def main():
 
     # Read access tokens, api names and URLs:
     secrets = read_secrets()
-    #print(secrets)
 
-    # 1. Get root api parameters:
+    # Get root api parameters:
     plussa_api_url = secrets["plussa"]["API urls"]["plussa-root"]
     plussa_api_key = secrets["plussa"]["API keys"]["plussa"]
-
-    # Fetch data from plussa into ElasticSearch cluster:
-    #get_plussa_data(plussa_api_url, plussa_api_key, SELECTED_COURSE_ID)
-
-    # Get root api parameters for git:
     gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
     gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
 
-    students_reply = search_elasticsearch("plussa-course-{:d}-students".format(SELECTED_COURSE_ID))
-    if students_reply == False:
-        return False
-    else:
-        students_reply = json.loads(students_reply)
+    data, cum_points, cum_commits, student_counts = aggregate_history_data_from_index("gitlab-course-30-commit-data")
+    data_by_weeks = {}
+    week = 1
+    for commit_counts in cum_commits:
+        data_by_weeks[week] = {'avg_cum_commits': commit_counts}
+        data_by_weeks[week]['avg_cum_points'] = cum_points[week-1]
+        data_by_weeks[week]['student_counts'] = student_counts
+        week += 1
 
-    index = 10
-    for hits in students_reply['hits']['hits'][5:]:
-        all_commit_data = []
+    data_by_grade = {"0": {}, "1": {}, "2": {}, "3": {}, "4": {}, "5": {}}
+    for grade in data_by_grade.keys():
+        data_by_grade[grade]['student_count'] = student_counts[int(grade)]
+        data_by_grade[grade]['avg_cum_points'] = [x[int(grade)] for x in cum_points]
+        data_by_grade[grade]['avg_cum_commits'] = [x[int(grade)] for x in cum_commits]
 
-        for divisions in [(0, 50), (50, 99)]:
-            for student in hits['_source']['results'][divisions[0]:divisions[1]]:
-
-                git_url = find_git_url(student, plussa_api_key)
-                
-                if git_url != False:
-                    print("Fetching commit data for git repo:", git_url)
-                    student_module_tree = parse_commits(get_module_tree(git_url, gitlab_api_key, gitlab_api_url))
-                else:
-                    student_module_tree = parse_no_commits(student['points']['modules'])
-
-                if len(student_module_tree) > 0:
-                    student["commits"] = student_module_tree
-
-                all_commit_data.append(student)
-
-            print("Writing data to ES:")
-            reply = write_to_elasticsearch(json.dumps({"results": all_commit_data}), "gitlab-course-{:d}-commit-data".format(SELECTED_COURSE_ID), '_doc', index)
-            print(reply)
-            index += 1
+    final_data = json.dumps({"data_by_weeks": data_by_weeks, "data_by_grades": data_by_grade})
+        
+    reply = write_to_elasticsearch(final_data, "gitlab-course-30-aggregate-data", document_id=0)
+    print(reply)
 
 
 main()
