@@ -1,4 +1,5 @@
 import axios from 'axios'
+import historyDataService from '../services/historyData'
 
 const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
 
@@ -136,6 +137,19 @@ const getData = () => {
         exerciseResults.push(exerciseWeek)
         exerciseResultsCumulative.push(exerciseWeekCumulatively)
       })
+
+      historyDataService
+        .getHistoryData()
+        .then(response => {
+          const historyByWeeks = response
+          Object.keys(historyByWeeks).forEach(weekName => {
+            let index = 0
+            historyByWeeks[weekName].avg_cum_points.forEach(gradePoints => {
+              resultsCumulative[parseInt(weekName)][`avg_points_grade_${index}`] = gradePoints
+              index += 1
+            })
+          })
+        })
 
       return [calcWeeklyAvgs(results),
               calcWeeklyAvgs(resultsCumulative),

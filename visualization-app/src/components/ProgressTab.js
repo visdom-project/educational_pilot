@@ -209,12 +209,23 @@ const ProgressTab = () => {
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
-        
-        {displayedStudents.map(key =>
+
+        {// Draw average point lines for each grade from history data:
+        ["0", "1", "2", "3", "4", "5"].map(index =>
+          <Line key={`avg_${selectedMode}_grade_${index}`}
+                type="linear" dot={false}
+                dataKey={`avg_${selectedMode}_grade_${index}`}
+                stroke={"#717171a6"}
+                strokeWidth={avgStrokeWidth}>
+          </Line>
+        )}
+
+        {// Draw student lines:
+        displayedStudents.map(key =>
           <Line key={helpers.studentToId(key)}
                 onClick={() => handleStudentLineClick(helpers.studentToId(key))}
                 className="hoverable"
-                type="linear"
+                type="linear" dot={false}
                 dataKey={key}
                 stroke={studentStrokeColor}
                 strokeWidth={studentStrokeWidth}>
