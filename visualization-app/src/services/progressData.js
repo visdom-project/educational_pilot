@@ -148,17 +148,28 @@ const getData = () => {
         .then(response => {
           const historyByWeeks = response
           Object.keys(historyByWeeks).forEach(weekName => {
-            // Add historical average cumulative weekly point counts:
+            // Add average weekly point counts:
             let index = 0
-            historyByWeeks[weekName].avg_cum_points.forEach(gradePoints => {
-              resultsCumulative[parseInt(weekName)][`avg_points_grade_${index}`] = gradePoints
+            historyByWeeks[weekName].avg_points.forEach(gradePoints => {
+              results[parseInt(weekName)-1][`avg_points_grade_${index}`] = gradePoints
               index += 1
             })
-            
-            // Add historical average cumulative weekly commit counts:
+            // Add average weekly commit counts:
+            index = 0
+            historyByWeeks[weekName].avg_commits.forEach(gradeCommits => {
+              weeklyComms[parseInt(weekName)-1][`avg_commits_grade_${index}`] = gradeCommits
+              index += 1
+            })
+            // Add average cumulative weekly point counts:
+            index = 0
+            historyByWeeks[weekName].avg_cum_points.forEach(gradePoints => {
+              resultsCumulative[parseInt(weekName)][`avg_cum_points_grade_${index}`] = gradePoints
+              index += 1
+            })
+            // Add average cumulative weekly commit counts:
             index = 0
             historyByWeeks[weekName].avg_cum_commits.forEach(gradeCommits => {
-              cumulativeComms[parseInt(weekName)][`avg_commits_grade_${index}`] = gradeCommits
+              cumulativeComms[parseInt(weekName)-1][`avg_cum_commits_grade_${index}`] = gradeCommits
               index += 1
             })
           })
@@ -183,7 +194,8 @@ const getStudentIds = (data) => {
   }
   const list = Object.keys(data[0]).map(key => key)
 
-  const toRemove =  ["week", "weeklyAvgs"]
+  const toRemove =  ["week", "weeklyAvgs", "avg_points_grade_0", "avg_points_grade_1", 
+                     "avg_points_grade_2", "avg_points_grade_3", "avg_points_grade_4", "avg_points_grade_5"]
   toRemove.forEach(item => {
     const indexOfItem = list.indexOf(item)
     if (indexOfItem > -1) {

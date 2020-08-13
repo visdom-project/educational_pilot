@@ -176,11 +176,21 @@ const ProgressTab = () => {
         <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
+        {// Draw average point lines for each grade from history data:
+        ["0", "1", "2", "3", "4", "5"].map(index =>
+          <Line key={`avg_${selectedMode}_grade_${index}`}
+                type="linear" dot={false}
+                dataKey={`avg_${selectedMode}_grade_${index}`}
+                stroke={"#d746dd4d"}
+                strokeWidth={avgStrokeWidth}>
+          </Line>
+        )}
+
         {displayedStudents.map(student => 
           <Line key={helpers.studentToId(student)}
                 onClick={() => handleStudentLineClick(helpers.studentToId(student))}
                 className="hoverable" 
-                type="linear"
+                type="linear" dot={false}
                 dataKey={student}
                 stroke={studentStrokeColor}
                 strokeWidth={studentStrokeWidth}>
@@ -204,10 +214,10 @@ const ProgressTab = () => {
 
         {// Draw average point lines for each grade from history data:
         ["0", "1", "2", "3", "4", "5"].map(index =>
-          <Line key={`avg_${selectedMode}_grade_${index}`}
+          <Line key={`avg_cum_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
-                dataKey={`avg_${selectedMode}_grade_${index}`}
-                stroke={"#717171a6"}
+                dataKey={`avg_cum_${selectedMode}_grade_${index}`}
+                stroke={"#d746dd4d"}
                 strokeWidth={avgStrokeWidth}>
           </Line>
         )}
