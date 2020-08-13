@@ -563,21 +563,21 @@ def aggregate_history_data_from_index(index_name):
 
     student_counts = [0, 0, 0, 0, 0, 0]
     data = {
-        "1":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "2":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "3":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "4":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "5":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "6":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "7":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "8":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "9":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "10": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "11": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "12": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "13": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "14": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]},
-        "15": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0]}}
+        "1":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "2":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "3":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "4":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "5":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "6":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "7":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "8":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "9":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "10": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "11": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "12": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "13": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "14": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
+        "15": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]}}
 
     for hits in reply['hits']['hits']:
         for student in hits['_source']['results']:
@@ -606,7 +606,7 @@ def aggregate_history_data_from_index(index_name):
                 cumulative_points = list(accumulate(weekly_points))
                 cumulative_commits = list(accumulate(weekly_commits))
 
-                # 2) TODO: Calculate course grade:
+                # 2) Calculate approximate course grade:
                 for treshold in [0, 401, 425, 575, 680, 785]:
                     course_grade += 0 if cumulative_points[-1] < treshold else 1
                 
@@ -615,25 +615,35 @@ def aggregate_history_data_from_index(index_name):
 
                  # 3) Add weekly sums into weekly sums of the given grade:
                 for week in data:
-                    data[week]['points'][course_grade] += cumulative_points[int(week)-1]
-                    data[week]['commits'][course_grade] += cumulative_commits[int(week)-1]
+                    data[week]['points'][course_grade] += weekly_points[int(week)-1]
+                    data[week]['commits'][course_grade] += weekly_commits[int(week)-1]
+                    data[week]['cum_points'][course_grade] += cumulative_points[int(week)-1]
+                    data[week]['cum_commits'][course_grade] += cumulative_commits[int(week)-1]
 
     avg_point_data = []
     avg_commit_data = []
+    avg_cum_point_data = []
+    avg_cum_commit_data = []
     # Calculate averages for each week and grade:
     for week in data.values():
 
         avg_points = [0, 0, 0, 0, 0, 0]
         avg_commits = [0, 0, 0, 0, 0, 0]
+        avg_cum_points = [0, 0, 0, 0, 0, 0]
+        avg_cum_commits = [0, 0, 0, 0, 0, 0]
         
         for i in range(0, 6):
             avg_points[i] = week['points'][i] / student_counts[i]
             avg_commits[i] = week['commits'][i] / student_counts[i]
+            avg_cum_points[i] = week['cum_points'][i] / student_counts[i]
+            avg_cum_commits[i] = week['cum_commits'][i] / student_counts[i]
 
         avg_point_data.append(avg_points)
         avg_commit_data.append(avg_commits)
+        avg_cum_point_data.append(avg_cum_points)
+        avg_cum_commit_data.append(avg_cum_commits)
         
-    return data, avg_point_data, avg_commit_data, student_counts
+    return data, avg_point_data, avg_commit_data, student_counts, avg_cum_point_data, avg_cum_commit_data
 
 
 def main():
@@ -653,18 +663,22 @@ def main():
     gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
     gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
 
-    data, cum_points, cum_commits, student_counts = aggregate_history_data_from_index("gitlab-course-30-commit-data")
+    data, points, commits, student_counts, cum_points, cum_commits = aggregate_history_data_from_index("gitlab-course-30-commit-data")
     data_by_weeks = {}
     week = 1
     for commit_counts in cum_commits:
         data_by_weeks[week] = {'avg_cum_commits': commit_counts}
         data_by_weeks[week]['avg_cum_points'] = cum_points[week-1]
+        data_by_weeks[week]['avg_points'] = points[week-1]
+        data_by_weeks[week]['avg_commits'] = commits[week-1]
         data_by_weeks[week]['student_counts'] = student_counts
         week += 1
 
     data_by_grade = {"0": {}, "1": {}, "2": {}, "3": {}, "4": {}, "5": {}}
     for grade in data_by_grade.keys():
         data_by_grade[grade]['student_count'] = student_counts[int(grade)]
+        data_by_grade[grade]['avg_points'] = [x[int(grade)] for x in points]
+        data_by_grade[grade]['avg_commits'] = [x[int(grade)] for x in commits]
         data_by_grade[grade]['avg_cum_points'] = [x[int(grade)] for x in cum_points]
         data_by_grade[grade]['avg_cum_commits'] = [x[int(grade)] for x in cum_commits]
 
