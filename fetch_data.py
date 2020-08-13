@@ -543,6 +543,15 @@ def parse_no_commits(module_tree):
 
     return new_module_tree
 
+
+def parse_exercise_count(exercise_list):
+    passed_exercises = 0
+    for exercise in exercise_list:
+        if exercise['points'] > 0:
+            passed_exercises += 1
+    return passed_exercises
+
+
 from itertools import accumulate
 
 def aggregate_history_data_from_index(index_name):
@@ -554,57 +563,57 @@ def aggregate_history_data_from_index(index_name):
         # 4) Add +1 to student count of said grade
     # *: If student is not dummy data point
     
-    # TODO: 1. Fetch student data from given ElasticSearch index:
+    # 1. Fetch student data from given ElasticSearch index:
     url = 'http://localhost:9200/{:s}/_search?pretty&size=20'.format(index_name)
     reply = make_get_request(url, headers=['Content-Type: application/json'])
 
     if reply != False:
         reply = json.loads(reply)
 
-    student_counts = [0, 0, 0, 0, 0, 0]
-    data = {
-        "1":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "2":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "3":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "4":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "5":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "6":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "7":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "8":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "9":  {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "10": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "11": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "12": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "13": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "14": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]},
-        "15": {"points": [0, 0, 0, 0, 0, 0], "commits": [0, 0, 0, 0, 0, 0], "cum_points": [0, 0, 0, 0, 0, 0], "cum_commits": [0, 0, 0, 0, 0, 0]}}
+    student_counts = [0 for x in range(0, 6)]
+    data = {}
+    for week in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15"]:
+        weekData = {}
+        for key in ["points", "commits", "exercises", "submissions"]:
+            weekData[key] = [0 for x in range(0, 6)]
+            weekData["cum_{:s}".format(key)] = [0 for x in range(0, 6)]
+        data[week] = weekData
 
     for hits in reply['hits']['hits']:
         for student in hits['_source']['results']:
             if "commits" in student.keys() and (len(student["commits"]) != 15 or student['commits'][0]['projects'][0]['name'] != "1.6.1.1 |fi:Eka palautus|en:First submission|"):
                 weekly_points = []
                 weekly_commits = []
+                weekly_exercises = []
+                weekly_submissions = []
                 course_grade = -1
                 
                 # 1) Calculate weekly point counts:
                 weekly_points = [module['points'] for module in student['points']['modules']]
-                while len(weekly_points) < 16:
-                    weekly_points.append(0)
-
+                
                 # Calculate weekly commit counts:
                 for module in student['commits']:
                     commit_count = 0
                     for project in module['projects']:
                         commit_count += project['commit_count']
-                    
                     weekly_commits.append(commit_count)
-                # Make the list of correct length:
-                while len(weekly_commits) < 16:
-                    weekly_commits.append(0)
 
-                # Calculate cumulative points and commits:
+                # TODO: Calculate weekly exercise count
+                weekly_exercises = [parse_exercise_count(module['exercises']) for module in student['points']['modules']]
+                
+                # TODO: Calculate weekly submissions count
+                weekly_submissions = [module['submission_count'] for module in student['points']['modules']]
+
+                # Make lists of correct length:
+                for count_list in [weekly_points, weekly_commits, weekly_exercises, weekly_submissions]:
+                    while len(count_list) < 16:
+                        count_list.append(0)
+
+                # Calculate cumulative points, commits, exercises and submissions:
                 cumulative_points = list(accumulate(weekly_points))
                 cumulative_commits = list(accumulate(weekly_commits))
+                cumulative_exercises = list(accumulate(weekly_exercises))
+                cumulative_submissions = list(accumulate(weekly_submissions))
 
                 # 2) Calculate approximate course grade:
                 for treshold in [0, 401, 425, 575, 680, 785]:
@@ -617,33 +626,54 @@ def aggregate_history_data_from_index(index_name):
                 for week in data:
                     data[week]['points'][course_grade] += weekly_points[int(week)-1]
                     data[week]['commits'][course_grade] += weekly_commits[int(week)-1]
+                    data[week]['exercises'][course_grade] += weekly_exercises[int(week)-1]
+                    data[week]['submissions'][course_grade] += weekly_submissions[int(week)-1]
+
                     data[week]['cum_points'][course_grade] += cumulative_points[int(week)-1]
                     data[week]['cum_commits'][course_grade] += cumulative_commits[int(week)-1]
+                    data[week]['cum_exercises'][course_grade] += cumulative_exercises[int(week)-1]
+                    data[week]['cum_submissions'][course_grade] += cumulative_submissions[int(week)-1]
 
     avg_point_data = []
     avg_commit_data = []
+    avg_exercise_data = []
+    avg_submission_data = []
     avg_cum_point_data = []
     avg_cum_commit_data = []
+    avg_cum_exercise_data = []
+    avg_cum_submission_data = []
     # Calculate averages for each week and grade:
     for week in data.values():
 
-        avg_points = [0, 0, 0, 0, 0, 0]
-        avg_commits = [0, 0, 0, 0, 0, 0]
-        avg_cum_points = [0, 0, 0, 0, 0, 0]
-        avg_cum_commits = [0, 0, 0, 0, 0, 0]
+        avg_points = [0 for x in range(0, 6)]
+        avg_commits = [0 for x in range(0, 6)]
+        avg_exercises = [0 for x in range(0, 6)]
+        avg_submissions = [0 for x in range(0, 6)]
+        avg_cum_points = [0 for x in range(0, 6)]
+        avg_cum_commits = [0 for x in range(0, 6)]
+        avg_cum_exercises = [0 for x in range(0, 6)]
+        avg_cum_submissions = [0 for x in range(0, 6)]
         
         for i in range(0, 6):
             avg_points[i] = week['points'][i] / student_counts[i]
             avg_commits[i] = week['commits'][i] / student_counts[i]
+            avg_exercises[i] = week['exercises'][i] / student_counts[i]
+            avg_submissions[i] = week['submissions'][i] / student_counts[i]
             avg_cum_points[i] = week['cum_points'][i] / student_counts[i]
             avg_cum_commits[i] = week['cum_commits'][i] / student_counts[i]
+            avg_cum_exercises[i] = week['cum_exercises'][i] / student_counts[i]
+            avg_cum_submissions[i] = week['cum_submissions'][i] / student_counts[i]
 
         avg_point_data.append(avg_points)
         avg_commit_data.append(avg_commits)
+        avg_exercise_data.append(avg_exercises)
+        avg_submission_data.append(avg_submissions)
         avg_cum_point_data.append(avg_cum_points)
         avg_cum_commit_data.append(avg_cum_commits)
+        avg_cum_exercise_data.append(avg_cum_exercises)
+        avg_cum_submission_data.append(avg_cum_submissions)
         
-    return data, avg_point_data, avg_commit_data, student_counts, avg_cum_point_data, avg_cum_commit_data
+    return avg_point_data, avg_commit_data, avg_exercise_data, avg_submission_data, avg_cum_point_data, avg_cum_commit_data, avg_cum_exercise_data, avg_cum_submission_data, student_counts
 
 
 def main():
@@ -663,14 +693,18 @@ def main():
     gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
     gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
 
-    data, points, commits, student_counts, cum_points, cum_commits = aggregate_history_data_from_index("gitlab-course-30-commit-data")
+    points, commits, exercises, submissions, cum_points, cum_commits, cum_exercises, cum_submissions, student_counts = aggregate_history_data_from_index("gitlab-course-30-commit-data")
     data_by_weeks = {}
     week = 1
     for commit_counts in cum_commits:
         data_by_weeks[week] = {'avg_cum_commits': commit_counts}
         data_by_weeks[week]['avg_cum_points'] = cum_points[week-1]
+        data_by_weeks[week]['avg_cum_exercises'] = cum_exercises[week-1]
+        data_by_weeks[week]['avg_cum_submissions'] = cum_submissions[week-1]
         data_by_weeks[week]['avg_points'] = points[week-1]
         data_by_weeks[week]['avg_commits'] = commits[week-1]
+        data_by_weeks[week]['avg_exercises'] = exercises[week-1]
+        data_by_weeks[week]['avg_submissions'] = submissions[week-1]
         data_by_weeks[week]['student_counts'] = student_counts
         week += 1
 
@@ -679,8 +713,12 @@ def main():
         data_by_grade[grade]['student_count'] = student_counts[int(grade)]
         data_by_grade[grade]['avg_points'] = [x[int(grade)] for x in points]
         data_by_grade[grade]['avg_commits'] = [x[int(grade)] for x in commits]
+        data_by_grade[grade]['avg_exercises'] = [x[int(grade)] for x in exercises]
+        data_by_grade[grade]['avg_submissions'] = [x[int(grade)] for x in submissions]
         data_by_grade[grade]['avg_cum_points'] = [x[int(grade)] for x in cum_points]
         data_by_grade[grade]['avg_cum_commits'] = [x[int(grade)] for x in cum_commits]
+        data_by_grade[grade]['avg_cum_exercises'] = [x[int(grade)] for x in cum_exercises]
+        data_by_grade[grade]['avg_cum_submissions'] = [x[int(grade)] for x in cum_submissions]
 
     final_data = json.dumps({"data_by_weeks": data_by_weeks, "data_by_grades": data_by_grade})
         
