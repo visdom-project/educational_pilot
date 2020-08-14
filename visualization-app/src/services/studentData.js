@@ -3,7 +3,7 @@ import axios from 'axios'
 const getStudentData = () => {
 
   const request = axios
-    .get( 'http://localhost:9200/gitlab-course-40-commit-data/_search',
+    .get( 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search',
           {Accept: 'application/json', 'Content-Type': 'application/json' })
     .then((response) => {
 

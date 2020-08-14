@@ -36,7 +36,8 @@ const CustomLabel = (props) => {
 const selectColor = (data, index, key) => {
   if (key === "commit_counts") {
     return data.passed[index] ? 
-            ( data.commit_counts[index] < 3 ? "lightblue" : 
+            ( data.commit_counts[index] < 1 ? "white" : 
+              data.commit_counts[index] < 3 ? "lightblue" : 
               data.commit_counts[index] < 6 ? "#89cee4" : 
               data.commit_counts[index] < 9 ? "#509ab3" : 
               data.commit_counts[index] < 15 ? "#286482" : "#1e4a61" ) :

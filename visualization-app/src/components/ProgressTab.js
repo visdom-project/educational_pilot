@@ -189,8 +189,8 @@ const ProgressTab = () => {
         )}
 
         {displayedStudents.map(student => 
-          <Line key={helpers.studentToId(student)}
-                onClick={() => handleStudentLineClick(helpers.studentToId(student))}
+          <Line key={student}
+                onClick={() => handleStudentLineClick(student)}
                 className="hoverable" 
                 type="linear" dot={false}
                 dataKey={student}
@@ -226,8 +226,8 @@ const ProgressTab = () => {
 
         {// Draw student lines:
         displayedStudents.map(key =>
-          <Line key={helpers.studentToId(key)}
-                onClick={() => handleStudentLineClick(helpers.studentToId(key))}
+          <Line key={key}
+                onClick={() => handleStudentLineClick(key)}
                 className="hoverable"
                 type="linear" dot={false}
                 dataKey={key}

@@ -29,7 +29,7 @@ const TresholdSelector = ({handleTresholdChange, chartWidth, treshold, title, tr
   }
   
   return (
-    <div style={{display: "flex", flexDirection: "row"}} className="intended">
+    <div style={{display: "flex", flexDirection: "row", marginBottom: "2em"}} className="intended">
       
       <input style={{marginLeft: "0", marginRight: "1em"}}
               type="checkbox" onClick={(event) => handleChecker(event)}>
@@ -39,7 +39,7 @@ const TresholdSelector = ({handleTresholdChange, chartWidth, treshold, title, tr
         <label htmlFor="treshold-slider" style={{fontSize: "large"}}>{title}</label>
 
         <div style={{display: "None", flexDirection: "row", marginTop: "0.5em"}} id="treshold-wrapper">
-          <div style={{display: "block", paddingRight: "0.5em"}}>0 %</div>
+          <div style={{display: "block", paddingRight: "0.5em"}}>Expected completion rate: 0 %</div>
           
           <input min="0" max="1" type="range" step="0.01" value={treshold}
                 onChange={(event) => handleTresholdChange(event.target.value)}

@@ -1,7 +1,7 @@
 import axios from 'axios'
 import historyDataService from '../services/historyData'
 
-const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
+const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search'
 
 const getModuleMapping = (modules) => {
 

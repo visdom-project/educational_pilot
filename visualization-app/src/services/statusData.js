@@ -1,9 +1,7 @@
 import axios from 'axios'
 import helpers from './helpers'
 
-//const baseUrl = 'http://localhost:9200/plussa-course-40-students/_search'
-const gitlabUrl = 'http://localhost:9200/gitlab-course-40-commit-data/_search'
-const baseUrl = gitlabUrl
+const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search'
 
 const getWeeklyPoints = (modules, mapping) => {
   
@@ -295,7 +293,7 @@ const formatProgressData = (pData) => {
 const getCommitData = () => {
 
   const request = axios
-    .get(gitlabUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
+    .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
     .then((response) => {
 
       // TODO: remove hard-coding from this mapping of modules and corresponding project names:
