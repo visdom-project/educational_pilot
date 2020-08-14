@@ -246,45 +246,59 @@ def parse_empty_fields(json_data):
 
     new_modules = []
     for module in json_data:
-        if len(module["exercises"]) > 0 or module['id'] in [352]:
+        if len(module["exercises"]) > 0 or module['id'] in [352, 570]:
             new_modules.append(module)
 
     return new_modules
 
 
+from hashlib import blake2b
+
 def write_students(course_students_url, plussa_api_key, course_id, course_instance, page_id):
 
-    student_list_index_key = "plussa-course-{:d}-students".format(course_id)
+    student_list_index_key = "plussa-course-{:d}-students-anonymized".format(course_id)
 
     # 7. Get student list details:
-    student_list_reply = fetch_api_to_ES(course_students_url, plussa_api_key, "", 0, write_to_es=False)
+    student_list_reply = fetch_api_to_ES(course_students_url, plussa_api_key, '', 0, write_to_es=False)
     if student_list_reply == False:
         return False
     else:
-    #if course_instance["instance_name"] == "summer-2020":   ## Handling GDPR.
-    #    user_ids_of_agreed = get_agreements(plussa_api_key)
+        if course_instance['instance_name'] == 'summer-2020':   ## Handling GDPR.
 
-        # Fetch point data for each student and write it to the student list:
-        for student in student_list_reply["results"]:
+            user_ids_of_agreed = get_agreements(plussa_api_key)
 
-            # Redact student data:
-            for key in ["url", "username", "student_id", "email"]:
-                student[key] = "redacted_due_to_no_research_permission"
-            student["is_external"] = False
+            # Fetch point data for each student and write it to the student list:
+            for student in student_list_reply['results']:
 
-            student_points_reply = fetch_api_to_ES(student["points"], plussa_api_key, "", 0, write_to_es=False)
-            if student_points_reply == False:
-                return False
-            
-            student_points_reply['points_by_difficulty'] = {}
-            student_points_reply['modules'] = parse_empty_fields(student_points_reply["modules"])
+                if student['student_id'] in user_ids_of_agreed:
+                    
+                    # Anonymize student data:
+                    for key in ['username', 'student_id', 'email', 'full_name']:
+                        hasher = blake2b(digest_size=10)
+                        hasher.update(student[key].encode())
+                        student[key] = hasher.hexdigest()
 
-            # Redact identifying data from points reply:
-            for key in ["url", "username", "student_id", "email"]:
-                student_points_reply[key] = "redacted_due_to_no_research_permission"
-            student_points_reply["is_external"] = False
+                    student.pop('tag_slugs', None)
 
-            student['points'] = student_points_reply
+                    # Fetch point data for the student:
+                    student_points_reply = fetch_api_to_ES(student['points'], plussa_api_key, '', 0, write_to_es=False)
+                    if student_points_reply == False:
+                        return False
+
+                    student_points_reply['modules'] = parse_empty_fields(student_points_reply['modules'])
+
+                    # Remove unnecessary fields from points reply:
+                    for key in ['username', 'student_id', 'email', 'full_name', 'points_by_difficulty', 'tag_slugs', 'id', 'url', 'is_external', 'tags']:
+                        student_points_reply.pop(key, None)
+
+                    student['points'] = student_points_reply
+                
+                else:
+                    # Redact and remove student data:
+                    student['username'] = 'redacted_due_to_no_research_permission'
+                    for key in ['student_id', 'email', 'full_name', 'data', 'is_external', 'points', 'tag_slugs']:
+                        student.pop(key, None)
+
 
     # 8. Write course student list with point data into the ES cluster:
     print("Writing course student list with point data into the ES cluster...")
@@ -318,7 +332,6 @@ def get_plussa_data(api_url, api_key, course_id_to_fetch):
 
             # Get course API url and id:
             course_instance_url = course_instance["url"]
-            #course_id = course_instance["id"]
             course_id = course_id_to_fetch
 
             # 5. Get course details from Plussa Course Instance API:
@@ -330,9 +343,17 @@ def get_plussa_data(api_url, api_key, course_id_to_fetch):
             course_exercises_url = course_details_reply["exercises"]
             
             # 6. Get exercise list details from Plussa API:
-            exercise_list_reply = fetch_api_to_ES(course_exercises_url, api_key, "plussa-course-{:d}-exercises".format(course_id), 0)
+            exercise_list_reply = make_get_request(course_exercises_url, api_key, [])
+            # Check that no error occured in getting course data and cast reply to json:
             if exercise_list_reply == False:
                 return False
+            exercise_list_reply = json.loads(exercise_list_reply)
+
+            # Remove extra modules:
+            exercise_list_reply['results'] = [module for module in exercise_list_reply['results'] if len(module['exercises']) > 0 or module['id'] in [570]]
+
+            # Write details into ES cluster with given index name:
+            write_to_elasticsearch("", index="plussa-course-{:d}-exercises".format(course_id), document_id=0, json_data=exercise_list_reply)
 
             next_url = course_details_reply["students"]
             page_id = 0
@@ -500,11 +521,15 @@ def parse_commits(module_tree):
 
                     if commit['id'] not in commit_ids:
                         commit_ids.append(commit['id'])
+                        
+                        hasher = blake2b(digest_size=10)
+                        hasher.update(commit['committer_email'].encode())
+                        
                         commits.append({
                             'hash': commit['id'],
                             'message': commit['message'],
                             'commit_date': commit['committed_date'],
-                            'committer_email': commit['committer_email']
+                            'committer_email': hasher.hexdigest()
                         })
 
             project_data['commit_count'] = len(commits)
@@ -624,15 +649,11 @@ def aggregate_history_data_from_index(index_name):
 
                  # 3) Add weekly sums into weekly sums of the given grade:
                 for week in data:
-                    data[week]['points'][course_grade] += weekly_points[int(week)-1]
-                    data[week]['commits'][course_grade] += weekly_commits[int(week)-1]
-                    data[week]['exercises'][course_grade] += weekly_exercises[int(week)-1]
-                    data[week]['submissions'][course_grade] += weekly_submissions[int(week)-1]
-
-                    data[week]['cum_points'][course_grade] += cumulative_points[int(week)-1]
-                    data[week]['cum_commits'][course_grade] += cumulative_commits[int(week)-1]
-                    data[week]['cum_exercises'][course_grade] += cumulative_exercises[int(week)-1]
-                    data[week]['cum_submissions'][course_grade] += cumulative_submissions[int(week)-1]
+                    keys = [('points', weekly_points), ('commits', weekly_commits), ('exercises', weekly_exercises), \
+                            ('submissions', weekly_submissions), ('cum_points', cumulative_points), ('cum_commits', cumulative_commits), \
+                            ('cum_exercises', cumulative_exercises), ('cum_submissions', cumulative_submissions)]
+                    for pair in keys:
+                        data[week][pair[0]] += pair[1][int(week)-1]
 
     avg_point_data = []
     avg_commit_data = []
@@ -676,24 +697,10 @@ def aggregate_history_data_from_index(index_name):
     return avg_point_data, avg_commit_data, avg_exercise_data, avg_submission_data, avg_cum_point_data, avg_cum_commit_data, avg_cum_exercise_data, avg_cum_submission_data, student_counts
 
 
-def main():
+def fetch_history_data(prev_course_id):
 
-    # TODO: Remove excess modules from Plussa data before writing into ES-cluster
-
-    SPRING_COURSE_ID = 30
-    SUMMER_COURSE_ID = 40
-    SELECTED_COURSE_ID = SPRING_COURSE_ID
-
-    # Read access tokens, api names and URLs:
-    secrets = read_secrets()
-
-    # Get root api parameters:
-    plussa_api_url = secrets["plussa"]["API urls"]["plussa-root"]
-    plussa_api_key = secrets["plussa"]["API keys"]["plussa"]
-    gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
-    gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
-
-    points, commits, exercises, submissions, cum_points, cum_commits, cum_exercises, cum_submissions, student_counts = aggregate_history_data_from_index("gitlab-course-30-commit-data")
+    index_name = "gitlab-course-{:s}-commit-data".format(prev_course_id)
+    points, commits, exercises, submissions, cum_points, cum_commits, cum_exercises, cum_submissions, student_counts = aggregate_history_data_from_index(index_name)
     data_by_weeks = {}
     week = 1
     for commit_counts in cum_commits:
@@ -722,8 +729,64 @@ def main():
 
     final_data = json.dumps({"data_by_weeks": data_by_weeks, "data_by_grades": data_by_grade})
         
-    reply = write_to_elasticsearch(final_data, "gitlab-course-30-aggregate-data", document_id=0)
+    es_index_name = "gitlab-course-{:s}-aggregate-data".format(prev_course_id)
+    reply = write_to_elasticsearch(final_data, es_index_name, document_id=0)
     print(reply)
+
+
+def fetch_anonymized_course_data(course_id, plussa_api_key, plussa_api_url, gitlab_api_key, gitlab_api_url):
+
+    # TODO: Remove excess modules from Plussa data before writing into ES-cluster
+    
+    # Fetch data from plussa into ElasticSearch cluster:
+    get_plussa_data(plussa_api_url, plussa_api_key, course_id)
+
+    index_name = "plussa-course-{:d}-students-anonymized".format(course_id)
+    students_reply = search_elasticsearch(index_name)
+    
+    if students_reply == False:
+        return False
+    else:
+        students_reply = json.loads(students_reply)
+
+    all_commit_data = []
+
+    # Fetch commit data for each student that has given a research permission:
+    for hits in students_reply['hits']['hits']:
+        for student in hits['_source']['results']:
+            if "redacted" not in student['username']:
+
+                git_url = find_git_url(student, plussa_api_key)
+
+                print("Fetching commit data for git repo:", git_url)
+                student_module_tree = get_module_tree(git_url, gitlab_api_key, gitlab_api_url)
+
+                student["commits"] = parse_commits(student_module_tree)
+
+                all_commit_data.append(student)
+
+    print("Writing data to ES:")
+    index_name = "gitlab-course-{:d}-commit-data-anonymized".format(course_id)
+    reply = write_to_elasticsearch(json.dumps({"results": all_commit_data}), index_name, '_doc', 0)
+    print(reply)
+
+
+def main():
+
+    SPRING_COURSE_ID = 30
+    SUMMER_COURSE_ID = 40
+
+    # Read access tokens, api names and URLs:
+    secrets = read_secrets()
+
+    # Get root api parameters:
+    plussa_api_url = secrets["plussa"]["API urls"]["plussa-root"]
+    plussa_api_key = secrets["plussa"]["API keys"]["plussa"]
+    gitlab_api_url = secrets["gitlab"]["API urls"]["gitlab-projects"]
+    gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
+
+    fetch_anonymized_course_data(SUMMER_COURSE_ID, plussa_api_key, plussa_api_url, gitlab_api_key, gitlab_api_url)
+    fetch_history_data(SPRING_COURSE_ID)
 
 
 main()
