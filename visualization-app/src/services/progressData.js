@@ -160,6 +160,19 @@ const getData = () => {
               weeklyComms[parseInt(weekName)-1][`avg_commits_grade_${index}`] = gradeCommits
               index += 1
             })
+            // Add average weekly exercise counts:
+            index = 0
+            historyByWeeks[weekName].avg_exercises.forEach(gradeExercises => {
+              exerciseResults[parseInt(weekName)-1][`avg_exercises_grade_${index}`] = gradeExercises
+              index += 1
+            })
+            // Add average weekly submission counts:
+            index = 0
+            historyByWeeks[weekName].avg_submissions.forEach(gradeSubmissions => {
+              weeklySubs[parseInt(weekName)-1][`avg_submissions_grade_${index}`] = gradeSubmissions
+              index += 1
+            })
+
             // Add average cumulative weekly point counts:
             index = 0
             historyByWeeks[weekName].avg_cum_points.forEach(gradePoints => {
@@ -170,6 +183,18 @@ const getData = () => {
             index = 0
             historyByWeeks[weekName].avg_cum_commits.forEach(gradeCommits => {
               cumulativeComms[parseInt(weekName)-1][`avg_cum_commits_grade_${index}`] = gradeCommits
+              index += 1
+            })
+            // Add average cumulative weekly exercise counts:
+            index = 0
+            historyByWeeks[weekName].avg_cum_exercises.forEach(gradeExercises => {
+              exerciseResultsCumulative[parseInt(weekName)][`avg_cum_exercises_grade_${index}`] = gradeExercises
+              index += 1
+            })
+            // Add average cumulative weekly submission counts:
+            index = 0
+            historyByWeeks[weekName].avg_cum_submissions.forEach(gradeSubmissions => {
+              cumulativeSubs[parseInt(weekName)-1][`avg_cum_submissions_grade_${index}`] = gradeSubmissions
               index += 1
             })
           })

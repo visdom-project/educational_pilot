@@ -60,6 +60,8 @@ const ProgressTab = () => {
   const studentStrokeWidth = 2
   const studentStrokeColor = "#8884d861"
 
+  const grades = ["0", "1", "2", "3", "4", "5"]
+
   useEffect(
     () => {
       dataService
@@ -177,7 +179,7 @@ const ProgressTab = () => {
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
         
         {// Draw average point lines for each grade from history data:
-        ["0", "1", "2", "3", "4", "5"].map(index =>
+        grades.map(index =>
           <Line key={`avg_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
                 dataKey={`avg_${selectedMode}_grade_${index}`}
@@ -213,7 +215,7 @@ const ProgressTab = () => {
         <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
 
         {// Draw average point lines for each grade from history data:
-        ["0", "1", "2", "3", "4", "5"].map(index =>
+        grades.map(index =>
           <Line key={`avg_cum_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
                 dataKey={`avg_cum_${selectedMode}_grade_${index}`}
