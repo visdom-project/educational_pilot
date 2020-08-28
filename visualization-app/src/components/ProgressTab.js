@@ -4,7 +4,6 @@ import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentSelector from './StudentSelector'
 import dataService from '../services/progressData'
-import helpers from '../services/helpers'
 
 const Controls = (props) => {
   const {handleClick, modes, selectedMode, showableLines,
@@ -58,7 +57,9 @@ const ProgressTab = () => {
   const selectorHeight = 40
   const avgStrokeWidth = 3
   const studentStrokeWidth = 2
-  const studentStrokeColor = "#8884d861"
+  const studentStrokeColor = '#8884d861'
+  const expectedStrokeColor = '#d746dd4d'
+  const avgStrokeColor = '#b1b1b1'
 
   const grades = ["0", "1", "2", "3", "4", "5"]
 
@@ -143,12 +144,21 @@ const ProgressTab = () => {
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
-    if (targetLine === "Expected") { setShowExpected(!showExpected) }
-    else {
-      // Toggle average lines visibility:
-      const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
+    
+    const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
+    
+    // Toggle the visibility of drawn reference lines:
+    if (targetLine === "Expected") {
       lines.forEach(node => {
-        if (node.outerHTML.includes(`stroke-width="${avgStrokeWidth}"`)) {
+        if (node.outerHTML.includes(`stroke="${expectedStrokeColor}"`)) {
+          node.style.display = showExpected ? "none" : ""
+        }
+      })
+      setShowExpected(!showExpected)
+    }
+    else {
+      lines.forEach(node => {
+        if (node.outerHTML.includes(`stroke="${avgStrokeColor}"`)) {
           node.style.display = showAvg ? "none" : ""
         }
       })
@@ -183,7 +193,7 @@ const ProgressTab = () => {
           <Line key={`avg_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
                 dataKey={`avg_${selectedMode}_grade_${index}`}
-                stroke={"#d746dd4d"}
+                stroke={expectedStrokeColor}
                 strokeWidth={avgStrokeWidth}>
           </Line>
         )}
@@ -200,7 +210,7 @@ const ProgressTab = () => {
         )}
         
         <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
-              stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
+              stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}/>
 
       </LineChart>
 
@@ -219,7 +229,7 @@ const ProgressTab = () => {
           <Line key={`avg_cum_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
                 dataKey={`avg_cum_${selectedMode}_grade_${index}`}
-                stroke={"#d746dd4d"}
+                stroke={expectedStrokeColor}
                 strokeWidth={avgStrokeWidth}>
           </Line>
         )}
@@ -237,7 +247,7 @@ const ProgressTab = () => {
         )}
 
         <Line type="linear" dataKey={avgDataKey} dot={false}
-              stroke="#b1b1b1" strokeWidth={avgStrokeWidth}/>
+              stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}/>
         
         <Brush y={chartHeight-5} tickFormatter={(tick) => tick + 1}></Brush>
       </LineChart>
