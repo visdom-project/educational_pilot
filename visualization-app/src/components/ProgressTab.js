@@ -24,6 +24,15 @@ const Controls = (props) => {
   )
 }
 
+const ExpectedLabel = ({index, x, y, strokeColor, grade, expectedIndex}) => {
+  if (index % 2 === 1) {
+    return (
+      <text x={x+4} y={y} dy={4} fill={strokeColor} fontSize={12} textAnchor="start">{grade}</text>
+    )
+  }
+  return (<></>)
+}
+
 const ProgressTab = () => {
 
   const [ studentIds, setStudentIds ] = useState([])
@@ -58,7 +67,7 @@ const ProgressTab = () => {
   const avgStrokeWidth = 3
   const studentStrokeWidth = 2
   const studentStrokeColor = '#8884d861'
-  const expectedStrokeColor = '#d746dd4d'
+  const expectedStrokeColor = '#46ddae82'
   const avgStrokeColor = '#b1b1b1'
 
   const grades = ["0", "1", "2", "3", "4", "5"]
@@ -154,6 +163,8 @@ const ProgressTab = () => {
           node.style.display = showExpected ? "none" : ""
         }
       })
+      document.querySelectorAll(".recharts-layer .recharts-label-list")
+        .forEach(node => node.style.display = showExpected ? "none" : "")
       setShowExpected(!showExpected)
     }
     else {
@@ -192,6 +203,7 @@ const ProgressTab = () => {
         grades.map(index =>
           <Line key={`avg_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
+                label={<ExpectedLabel grade={index} strokeColor={"#78b5a2"} expectedIndex={12}/>}
                 dataKey={`avg_${selectedMode}_grade_${index}`}
                 stroke={expectedStrokeColor}
                 strokeWidth={avgStrokeWidth}>
@@ -227,6 +239,7 @@ const ProgressTab = () => {
         {// Draw average point lines for each grade from history data:
         grades.map(index =>
           <Line key={`avg_cum_${selectedMode}_grade_${index}`}
+                label={<ExpectedLabel grade={index} strokeColor={"#78b5a2"} expectedIndex={15}/>}
                 type="linear" dot={false}
                 dataKey={`avg_cum_${selectedMode}_grade_${index}`}
                 stroke={expectedStrokeColor}
