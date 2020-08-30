@@ -104,18 +104,18 @@ const getData = () => {
 
       addCumulativePointData(response, moduleMapping) // Data preprocessing: add cumulative point data, remove excess modules
 
-      const results = []
-      const resultsCumulative = []
-      const exerciseResults = []
-      const exerciseResultsCumulative = []
+      const weeklyPoints = []
+      const cumulativePoints = []
+      const weeklyExercises = []
+      const cumulativeExercises = []
 
       const weeks = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
       weeks.forEach(week => {
         const exerciseWeek = {...week}
 
-        const weekCumulatively = {week: week.week}
-        const exerciseWeekCumulatively = {week: week.week}
+        const weekCumulatively = {}
+        const exerciseWeekCumulatively = {}
 
         response.data.hits.hits.forEach(hit => {
           hit._source.results.forEach(result => {
@@ -131,15 +131,15 @@ const getData = () => {
           })
         })
 
-        results.push(week)
-        resultsCumulative.push(weekCumulatively)
+        weeklyPoints.push(week)
+        cumulativePoints.push(weekCumulatively)
 
-        exerciseResults.push(exerciseWeek)
-        exerciseResultsCumulative.push(exerciseWeekCumulatively)
+        weeklyExercises.push(exerciseWeek)
+        cumulativeExercises.push(exerciseWeekCumulatively)
       })
 
       // Parse commit data:
-      const [weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs]
+      const [weeklyCommits, cumulativeCommits, weeklySubmissions, cumulativeSubmissions]
         = getCommitData(response, moduleMapping)
 
       // Add history data to data set:
@@ -148,68 +148,58 @@ const getData = () => {
         .then(response => {
           const historyByWeeks = response
           Object.keys(historyByWeeks).forEach(weekName => {
-            // Add average weekly point counts:
-            let index = 0
-            historyByWeeks[weekName].avg_points.forEach(gradePoints => {
-              results[parseInt(weekName)-1][`avg_points_grade_${index}`] = gradePoints
-              index += 1
-            })
-            // Add average weekly commit counts:
-            index = 0
-            historyByWeeks[weekName].avg_commits.forEach(gradeCommits => {
-              weeklyComms[parseInt(weekName)-1][`avg_commits_grade_${index}`] = gradeCommits
-              index += 1
-            })
-            // Add average weekly exercise counts:
-            index = 0
-            historyByWeeks[weekName].avg_exercises.forEach(gradeExercises => {
-              exerciseResults[parseInt(weekName)-1][`avg_exercises_grade_${index}`] = gradeExercises
-              index += 1
-            })
-            // Add average weekly submission counts:
-            index = 0
-            historyByWeeks[weekName].avg_submissions.forEach(gradeSubmissions => {
-              weeklySubs[parseInt(weekName)-1][`avg_submissions_grade_${index}`] = gradeSubmissions
-              index += 1
-            })
 
-            // Add average cumulative weekly point counts:
+            const datastructures = {
+              'points': weeklyPoints,
+              'exercises': weeklyExercises,
+              'commits': weeklyCommits,
+              'submissions': weeklySubmissions,
+              'cum_commits': cumulativeCommits,
+              'cum_submissions': cumulativeSubmissions
+            }
+            const keys = Object.keys(datastructures)
+
+            // Add average weekly and cumulative point/exercise/commit/submission counts:
+            let index = 0
+            keys.forEach(key => {
+              index = 0
+              historyByWeeks[weekName][`avg_${key}`].forEach(gradeValues => {
+                datastructures[key][parseInt(weekName)-1][`avg_${key}_grade_${index}`] = gradeValues
+                index += 1
+              })
+            })
+            
+            // Add average cumulative weekly point and exercise counts:
             index = 0
             historyByWeeks[weekName].avg_cum_points.forEach(gradePoints => {
-              resultsCumulative[parseInt(weekName)][`avg_cum_points_grade_${index}`] = gradePoints
+              cumulativePoints[parseInt(weekName)][`avg_cum_points_grade_${index}`] = gradePoints
               index += 1
             })
-            // Add average cumulative weekly commit counts:
-            index = 0
-            historyByWeeks[weekName].avg_cum_commits.forEach(gradeCommits => {
-              cumulativeComms[parseInt(weekName)-1][`avg_cum_commits_grade_${index}`] = gradeCommits
-              index += 1
-            })
-            // Add average cumulative weekly exercise counts:
             index = 0
             historyByWeeks[weekName].avg_cum_exercises.forEach(gradeExercises => {
-              exerciseResultsCumulative[parseInt(weekName)][`avg_cum_exercises_grade_${index}`] = gradeExercises
-              index += 1
-            })
-            // Add average cumulative weekly submission counts:
-            index = 0
-            historyByWeeks[weekName].avg_cum_submissions.forEach(gradeSubmissions => {
-              cumulativeSubs[parseInt(weekName)-1][`avg_cum_submissions_grade_${index}`] = gradeSubmissions
+              cumulativeExercises[parseInt(weekName)][`avg_cum_exercises_grade_${index}`] = gradeExercises
               index += 1
             })
           })
 
           const grades = ['0', '1', '2', '3', '4', '5']
           grades.forEach(grade => {
-            resultsCumulative[0][`avg_cum_points_grade_${grade}`] = 0
-            exerciseResultsCumulative[0][`avg_cum_exercises_grade_${grade}`] = 0
+            cumulativePoints[0][`avg_cum_points_grade_${grade}`] = 0
+            cumulativeExercises[0][`avg_cum_exercises_grade_${grade}`] = 0
+            cumulativeCommits[cumulativeCommits.length-1][`avg_cum_commits_grade_${grade}`] 
+              = cumulativeCommits[cumulativeCommits.length-2][`avg_cum_commits_grade_${grade}`]
+            cumulativeSubmissions[cumulativeSubmissions.length-1][`avg_cum_submissions_grade_${grade}`]
+              = cumulativeSubmissions[cumulativeSubmissions.length-2][`avg_cum_submissions_grade_${grade}`]
           })
+          delete cumulativeCommits[cumulativeCommits.length-1].week
+          delete cumulativeSubmissions[cumulativeSubmissions.length-1].week
 
-          return [calcWeeklyAvgs(results),
-            calcWeeklyAvgs(resultsCumulative),
-            calcWeeklyAvgs(exerciseResults),
-            calcWeeklyAvgs(exerciseResultsCumulative),
-            weeklyComms, cumulativeComms, weeklySubs, cumulativeSubs]
+          return [calcWeeklyAvgs(weeklyPoints),
+            calcWeeklyAvgs(cumulativePoints),
+            calcWeeklyAvgs(weeklyExercises),
+            calcWeeklyAvgs(cumulativeExercises),
+            weeklyCommits, cumulativeCommits,
+            weeklySubmissions, cumulativeSubmissions]
         })
     })
     .catch(someError => [[], []])
@@ -240,7 +230,7 @@ const getStudentIds = (data) => {
 
 const getCommitData = (response, moduleMapping) => {
 
-  const results = moduleMapping.map((id, index) => { return { week: index + 1 } })
+  const weeklyPoints = moduleMapping.map((id, index) => { return { week: index + 1 } })
   const cumulativeResults = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
   const submissions = moduleMapping.map((id, index) => { return { week: index + 1 } })
@@ -253,7 +243,7 @@ const getCommitData = (response, moduleMapping) => {
         // Calculcate commit data (weekly & cumulative commit counts):
         const weeklyCommits = []
 
-        results.forEach(weekObject => {
+        weeklyPoints.forEach(weekObject => {
           const index = student.commits.findIndex(module => 
             (module.moduleName === "01-14" ? 14 : parseInt(module.module_name)) === parseInt(weekObject.week))
           const commitSum = index < 0 ? 0 : student.commits[index].projects.reduce((sum, project) => sum + project.commit_count, 0)
@@ -301,7 +291,7 @@ const getCommitData = (response, moduleMapping) => {
     })
   })
 
-  return [calcWeeklyAvgs(results),
+  return [calcWeeklyAvgs(weeklyPoints),
           calcWeeklyAvgs(cumulativeResults),
           calcWeeklyAvgs(submissions),
           calcWeeklyAvgs(cumulativeSubmissions)]
