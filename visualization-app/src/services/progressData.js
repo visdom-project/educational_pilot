@@ -199,6 +199,12 @@ const getData = () => {
             })
           })
 
+          const grades = ['0', '1', '2', '3', '4', '5']
+          grades.forEach(grade => {
+            resultsCumulative[0][`avg_cum_points_grade_${grade}`] = 0
+            exerciseResultsCumulative[0][`avg_cum_exercises_grade_${grade}`] = 0
+          })
+
           return [calcWeeklyAvgs(results),
             calcWeeklyAvgs(resultsCumulative),
             calcWeeklyAvgs(exerciseResults),

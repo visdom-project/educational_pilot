@@ -2,9 +2,12 @@ import React from 'react'
 
 const StudentSelector = ({students, handleClick}) => {
   return (
-    <>
-      <h2>Selected students</h2>
-      <ul style={{columns: Math.round(students.length / 20 + 1), width: "fit-content"}}>
+    <div style={{marginLeft: "3em", marginTop: "0em"}}>
+      <ul style={{columns: Math.round(students.length / 20) +1,
+                  width: "fit-content",
+                  listStyleType: "none",
+                  marginTop: "0em",
+                  borderLeft: "1px lightgrey solid"}}>
         {students.map(student =>
           <li key={student}
               onClick={() => handleClick(student)}
@@ -12,7 +15,7 @@ const StudentSelector = ({students, handleClick}) => {
             {student}
           </li>)}
       </ul>
-    </>
+    </div>
   )
 }
 

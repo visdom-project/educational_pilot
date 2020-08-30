@@ -4,6 +4,7 @@ import DropdownMenu from './DropdownMenu'
 import CheckBoxMenu from './CheckBoxMenu'
 import StudentSelector from './StudentSelector'
 import dataService from '../services/progressData'
+import GroupDisplay from './GroupDisplay.js';
 
 const Controls = (props) => {
   const {handleClick, modes, selectedMode, showableLines,
@@ -24,8 +25,8 @@ const Controls = (props) => {
   )
 }
 
-const ExpectedLabel = ({index, x, y, strokeColor, grade, expectedIndex}) => {
-  if (index % 2 === 1) {
+const ExpectedLabel = ({index, x, y, strokeColor, grade, display}) => {
+  if (display && index % 2 === 1) {
     return (
       <text x={x+4} y={y} dy={4} fill={strokeColor} fontSize={12} textAnchor="start">{grade}</text>
     )
@@ -121,7 +122,7 @@ const ProgressTab = () => {
 
   // Hide student that was clicked from the chart:
   const handleStudentLineClick = (id) => {
-    setDisplayedStudents(displayedStudents.filter(student => !student.includes(id.slice(0, 6))))
+    setDisplayedStudents(displayedStudents.filter(student => !student.includes(id)))
     document.querySelector(`#li-${id}`).style.color = "grey"
   }
 
@@ -177,9 +178,67 @@ const ProgressTab = () => {
     }
   }
 
+  const handleToggleStudentGroupClick = (groupIdentifier) => {
+    const showGroup = document.getElementById(`input-${groupIdentifier}`).checked
+    const gradeSwitches = document.querySelectorAll(".gradeswitch")
+    const color = showGroup ? "black" : "grey"
+    
+    if (groupIdentifier === "all") {
+      setDisplayedStudents(showGroup ? studentIds : [])
+      gradeSwitches.forEach(node => node.checked = showGroup)
+      studentIds.forEach(studentId => document.querySelector(`#li-${studentId}`).style.color = color)
+    }
+    else {
+      const targetData = displayedCumulativeData[displayedCumulativeData.length-1]
+      const targetGrade = parseInt(groupIdentifier)
+      
+      // Calculate point range of target students:
+      const pointMinimum = targetGrade < 1 ? 0 : targetData[`avg_cum_${selectedMode}_grade_${targetGrade-1}`]
+      const pointMaximum = targetGrade < 6 ? targetData[`avg_cum_${selectedMode}_grade_${targetGrade}`] : 2000
+
+      // Select students that belong to given point range:
+      const targetStudents = Object.keys(targetData).filter(studentId => 
+          pointMinimum <= targetData[studentId] && pointMaximum >= targetData[studentId])
+      
+      // Toggle the "visibility" of the selected students in the student listing:
+      targetStudents
+        .filter(student => !['week', 'weeklyAvgs'].includes(student) && !student.startsWith("avg_"))
+        .forEach(studentId => document.querySelector(`#li-${studentId}`).style.color = color)
+
+      // Toggle the visibility of students by selecting correct group of students to be displayed:
+      setDisplayedStudents(
+        showGroup ?
+          displayedStudents.concat(targetStudents) :
+          displayedStudents.filter(student => !targetStudents.includes(student))
+      )
+
+      if (showGroup) {
+        // Figure out if all grade groups are selected:
+        let allChecked = true
+        gradeSwitches.forEach(node => {
+          if (!node.checked) { allChecked = false }
+        })
+
+        if (allChecked) {
+          // Activate "all students selected" switch:
+          const allSwitch = document.getElementById('input-all')
+          if (!allSwitch.checked) { allSwitch.checked = true }
+        }
+      }
+      else {  // Hiding student groups
+        // Make sure "all students selected" button is inactive:
+        const allSwitch = document.getElementById('input-all')
+        if (allSwitch.checked) { allSwitch.checked = false }
+      }
+    }
+  }
+
   return (
     <>
-      <StudentSelector students={studentIds} handleClick={handleListClick} />
+      <div className="fit-row">
+        <GroupDisplay grades={grades} handleClick={handleToggleStudentGroupClick}/>
+        <StudentSelector students={studentIds} handleClick={handleListClick} />
+      </div>
 
       <div className="fit-row">
         <h2>{`Weekly ${selectedMode}`}</h2>
@@ -203,10 +262,13 @@ const ProgressTab = () => {
         grades.map(index =>
           <Line key={`avg_${selectedMode}_grade_${index}`}
                 type="linear" dot={false}
-                label={<ExpectedLabel grade={index} strokeColor={"#78b5a2"} expectedIndex={12}/>}
+                label={<ExpectedLabel grade={index}
+                                      strokeColor={"#78b5a2"}
+                                      display={showExpected}/>}
                 dataKey={`avg_${selectedMode}_grade_${index}`}
                 stroke={expectedStrokeColor}
-                strokeWidth={avgStrokeWidth}>
+                strokeWidth={avgStrokeWidth}
+                style={{display: showExpected ? "" : "none"}}>
           </Line>
         )}
 
@@ -222,7 +284,8 @@ const ProgressTab = () => {
         )}
         
         <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
-              stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}/>
+              stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}
+              style={{display: showAvg ? "" : "none"}}/>
 
       </LineChart>
 
@@ -239,11 +302,14 @@ const ProgressTab = () => {
         {// Draw average point lines for each grade from history data:
         grades.map(index =>
           <Line key={`avg_cum_${selectedMode}_grade_${index}`}
-                label={<ExpectedLabel grade={index} strokeColor={"#78b5a2"} expectedIndex={15}/>}
+                label={<ExpectedLabel grade={index}
+                                      strokeColor={"#78b5a2"}
+                                      display={showExpected}/>}
                 type="linear" dot={false}
                 dataKey={`avg_cum_${selectedMode}_grade_${index}`}
                 stroke={expectedStrokeColor}
-                strokeWidth={avgStrokeWidth}>
+                strokeWidth={avgStrokeWidth}
+                style={{display: showExpected ? "" : "none"}}>
           </Line>
         )}
 
@@ -260,7 +326,8 @@ const ProgressTab = () => {
         )}
 
         <Line type="linear" dataKey={avgDataKey} dot={false}
-              stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}/>
+              stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}
+              style={{display: showAvg ? "" : "none"}}/>
         
         <Brush y={chartHeight-5} tickFormatter={(tick) => tick + 1}></Brush>
       </LineChart>
