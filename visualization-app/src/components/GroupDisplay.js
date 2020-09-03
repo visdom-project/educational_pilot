@@ -6,7 +6,7 @@ const GroupDisplay = ({grades, handleClick}) => {
   return (
     <div style={{paddingLeft: '2em'}}>
       <h3 style={{paddingLeft: '0em', marginTop: '0em'}}>Display students by predicted grade:</h3>
-      <table><tbody>
+      <table style={{width: "13em", fontSize: "15px"}}><tbody>
         {grades.concat(['6']).map(grade => 
           <tr key={`grade-${grade}`}>
             <td>

@@ -206,11 +206,11 @@ const ProgressTab = () => {
         .forEach(studentId => document.querySelector(`#li-${studentId}`).style.color = color)
 
       // Toggle the visibility of students by selecting correct group of students to be displayed:
-      setDisplayedStudents(
-        showGroup ?
-          displayedStudents.concat(targetStudents) :
-          displayedStudents.filter(student => !targetStudents.includes(student))
-      )
+      const disp = showGroup ?
+        displayedStudents.concat(targetStudents.filter(student => !student.startsWith("avg_"))) :
+        displayedStudents.filter(student => !targetStudents.includes(student) && !student.startsWith("avg_"))
+      
+      setDisplayedStudents(disp)
 
       if (showGroup) {
         // Figure out if all grade groups are selected:
@@ -256,7 +256,7 @@ const ProgressTab = () => {
                  margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
-        <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
+        <YAxis label={{ value: `${selectedMode}`, angle: -90, position: 'left', offset: -10 }}/>
         
         {// Draw average point lines for each grade from history data:
         grades.map(index =>
@@ -297,7 +297,7 @@ const ProgressTab = () => {
                  margin={{ top: 10, right: 15, left: 25, bottom: selectorHeight }}>
         <CartesianGrid strokeDasharray="3 3" />
         <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
-        <YAxis label={{ value: axisNames[1], position: 'left', offset: -20 }}/>
+        <YAxis label={{ value: `cumulative ${selectedMode}`, angle: -90, position: 'left', offset: -10 }}/>
 
         {// Draw average point lines for each grade from history data:
         grades.map(index =>
@@ -325,7 +325,7 @@ const ProgressTab = () => {
           </Line>
         )}
 
-        <Line type="linear" dataKey={avgDataKey} dot={false}
+        <Line id={avgDataKey} type="linear" dataKey={avgDataKey} dot={false}
               stroke={avgStrokeColor} strokeWidth={avgStrokeWidth}
               style={{display: showAvg ? "" : "none"}}/>
         

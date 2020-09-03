@@ -106,7 +106,7 @@ const StatusTab = () => {
 
   const [ selectedStudent, setSelectedStudent ] = useState("")
   
-  const chartWidth = 1600
+  const chartWidth = 1636
   const chartHeight = document.documentElement.clientHeight*0.7
 
   useEffect(

@@ -143,7 +143,7 @@ const MultiChart = (props) => {
 
               /** Math magic to calculate close enough spacing for table 
                * elements that show submission counts for each exercise: */
-              const totalWidth = chartWidth * 0.889
+              const totalWidth = chartWidth * 0.89
               const barCount = countData.length
               const barsWidth = barCount * barWidth
               const totalWidthAfterBars = totalWidth - barsWidth

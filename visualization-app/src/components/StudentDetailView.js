@@ -109,7 +109,17 @@ const PointsDisplay = (data) => {
   )
 }
 
+const EmptyView = ({title}) => 
+  <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
+    <h2>{title}</h2>
+    <div className="intended">Click a student to view details.</div>
+  </div>
+
 const parseStudentData = (studentData) => {
+
+  if (studentData === undefined) {
+    return undefined
+  }
 
   const commitModules = studentData.commits
 
@@ -165,25 +175,21 @@ const StudentDetailView = ({selectedStudentID}) => {
 
   const title = "Exercise completion details"
 
-  if (selectedStudentID !== "" && students.length > 0) {
-    const studentData = parseStudentData(students.find(student => student.student_id === selectedStudentID))
+  const studentData = (selectedStudentID !== "" && students.length > 0) ?
+    parseStudentData(students.find(student => student.student_id === selectedStudentID)) : 
+    undefined
 
+  if (studentData !== undefined) {
     return (
       <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
         <h2>{title}</h2>
-        <h3><strong>{studentData.email}</strong>, {selectedStudentID}</h3>
+        <h3><strong>Student: {studentData.email}</strong></h3>
         <PointsDisplay data={studentData.points}></PointsDisplay>
       </div>
-    )
+    ) 
   }
-  else {
-    return (
-      <div style={{marginBottom: document.documentElement.clientHeight*0.1}}>
-        <h2>{title}</h2>
-        <div className="intended">Click a student to view details.</div>
-      </div>
-    )
-  }
+
+  return (<EmptyView />)
 }
 
 export default StudentDetailView
