@@ -200,7 +200,7 @@ def fetch_api_to_ES(url, api_key, index_name, data_id, write_to_es=True):
     reply = make_get_request(url, api_key, [])
 
     # Check that no error occured in getting course data and cast reply to json:
-    if reply == False:
+    if reply == False or "error" in reply:
         print("error occured in get request from plussa API!")
         print("Reply body:", reply)
         return False
@@ -263,7 +263,7 @@ def write_students(course_students_url, plussa_api_key, course_id, course_instan
     if student_list_reply == False:
         return False
     else:
-        if course_instance['instance_name'] == 'summer-2020':   ## Handling GDPR.
+        if course_instance['instance_name'] in ['spring-2020', 'summer-2020']:   ## Handling GDPR.
 
             user_ids_of_agreed = get_agreements(plussa_api_key)
 
@@ -699,7 +699,7 @@ def aggregate_history_data_from_index(index_name):
 
 def fetch_history_data(prev_course_id):
 
-    index_name = "gitlab-course-{:s}-commit-data".format(prev_course_id)
+    index_name = "gitlab-course-{:d}-commit-data".format(prev_course_id)
     points, commits, exercises, submissions, cum_points, cum_commits, cum_exercises, cum_submissions, student_counts = aggregate_history_data_from_index(index_name)
     data_by_weeks = {}
     week = 1
@@ -786,6 +786,7 @@ def main():
     gitlab_api_key = secrets["gitlab"]["API keys"]["gitlab"]
 
     fetch_anonymized_course_data(SUMMER_COURSE_ID, plussa_api_key, plussa_api_url, gitlab_api_key, gitlab_api_url)
+    fetch_anonymized_course_data(SPRING_COURSE_ID, plussa_api_key, plussa_api_url, gitlab_api_key, gitlab_api_url)
     fetch_history_data(SPRING_COURSE_ID)
 
 
