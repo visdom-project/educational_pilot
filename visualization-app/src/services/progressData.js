@@ -43,7 +43,6 @@ const getPointsForWeek = (data, moduleId) => {
 const calcWeeklyAvgs = (weeklyPointData) => {
 
   weeklyPointData.forEach(week => {
-
     let len = 0
     const pointSum = Object.keys(week).reduce((sum, student) => {
       len += 1
@@ -51,7 +50,8 @@ const calcWeeklyAvgs = (weeklyPointData) => {
     }, 0)
 
     // Avg calculation takes into account that week-field is calculated in the point sum
-    week.weeklyAvgs = (pointSum - week.week) / (len - 1)
+    const reduce = (week.week !== undefined) ? week.week : 0
+    week.weeklyAvgs = (pointSum - reduce) / (len - 1)
   })
 
   return weeklyPointData
