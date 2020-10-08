@@ -1,6 +1,6 @@
 const compare = (a, b) => {
-  const aVal = a.totPts - a.missed + a.week
-  const bVal = b.totPts - b.missed + b.week
+  const aVal = a.totPts - a.missed + a.week;
+  const bVal = b.totPts - b.missed + b.week;
 
   if (aVal < bVal) {
     return -1;
@@ -22,8 +22,8 @@ const orderData = (data) => {
 }
 
 const compareCounts = (a, b) => {
-  const aVal = a.cumulativePoints
-  const bVal = b.cumulativePoints
+  const aVal = a.cumulativePoints;
+  const bVal = b.cumulativePoints;
 
   if (aVal < bVal) {
     return -1;

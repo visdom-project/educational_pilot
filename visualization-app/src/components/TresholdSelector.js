@@ -1,7 +1,6 @@
-import React from 'react'
+import React from "react"
 
-const TresholdSelector = ({handleTresholdChange, chartWidth, treshold, title, tresholdCount}) => {
-
+const TresholdSelector = ({ handleTresholdChange, chartWidth, treshold, title, tresholdCount }) => {
   if ( tresholdCount >= 0) {
     // Update line place:
     const refLine = document.querySelector("#treshold-line")
@@ -17,7 +16,6 @@ const TresholdSelector = ({handleTresholdChange, chartWidth, treshold, title, tr
   }
 
   const handleChecker = (event) => {
-
     const refLine = document.querySelector("#treshold-line")
     if (refLine !== null) {
       refLine.style.display = event.target.checked ? "block" : "None"
@@ -51,7 +49,7 @@ const TresholdSelector = ({handleTresholdChange, chartWidth, treshold, title, tr
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 export default TresholdSelector

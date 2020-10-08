@@ -1,7 +1,7 @@
-import React from 'react'
-import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
-import '../stylesheets/studentbar.css'
-import TresholdSelector from './TresholdSelector'
+import React from "react"
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from "recharts";
+import "../stylesheets/studentbar.css"
+import TresholdSelector from "./TresholdSelector"
 
 const CustomLabel = (props) => {
   return (
@@ -14,7 +14,7 @@ const CustomLabel = (props) => {
           textAnchor="left">
       {props.title}
     </text>
-  )
+  );
 }
 
 /** Chooses a fitting color code for given exercise and student.
@@ -56,7 +56,7 @@ const MyRefLine = () => {
                   backgroundColor: "#4a76ff", marginTop: "-70vh",
                   display: "None"}}
          id="treshold-line"></div>
-  )
+  );
 }
 
 const MultiChart = (props) => {
@@ -76,7 +76,7 @@ const MultiChart = (props) => {
   const barWidth = 10
 
   if (data === undefined || commonData === undefined) {
-    console.log("Either student data or common student data is undefined. Data:", data, "common data:", commonData)
+    console.error("Either student data or common student data is undefined. Data:", data, "common data:", commonData)
     return <div className="intended">No data to display.</div>
   }
 
@@ -107,10 +107,10 @@ const MultiChart = (props) => {
           
           <XAxis dataKey="id"
                  padding={{ left: 0, right: 0 }}
-                 label={{ value: axisNames[0], position: 'bottom' }}/>
-          <YAxis label={{ value: axisNames[1], position: 'left', offset: -21 }}
+                 label={{ value: axisNames[0], position: "bottom" }}/>
+          <YAxis label={{ value: axisNames[1], position: "left", offset: -21 }}
                  type="number"
-                 domain={['dataMin', 'dataMax']}
+                 domain={["dataMin", "dataMax"]}
                  ticks={submissionTicks}/>
 
           {submissionMapping.reverse().map(bar => 
@@ -186,7 +186,7 @@ const MultiChart = (props) => {
         </div>
 
       </div>
-    )
+    );
   }
 
   const mapping = [{
@@ -218,10 +218,10 @@ const MultiChart = (props) => {
         
         <XAxis dataKey="id"
                padding={{ left: 0, right: 0 }}
-               label={{ value: axisNames[0], position: 'bottom' }}/>
-        <YAxis label={{ value: axisNames[1], position: 'left', offset: -21 }}
+               label={{ value: axisNames[0], position: "bottom" }}/>
+        <YAxis label={{ value: axisNames[1], position: "left", offset: -21 }}
                type="number"
-               domain={['dataMin', 'dataMax']}
+               domain={["dataMin", "dataMax"]}
                ticks={ticks}/>
 
         <Area type="monotone" dataKey={dataKeys.totalPoints} fill="#c3c3c3" stroke="#c3c3c3" />
@@ -274,7 +274,7 @@ const MultiChart = (props) => {
                         title="Select treshold for lagging students"
                         tresholdCount={studentsBelowTreshold}/>
     </div>
-  )
+  );
 }
 
 export default MultiChart

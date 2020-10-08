@@ -1,5 +1,5 @@
-import axios from 'axios'
-import helpers from './helpers'
+import axios from "axios"
+import helpers from "./helpers"
 
 const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search'
 
@@ -97,7 +97,6 @@ const formatSubmissionData = (data) => {
 }
 
 const getData = () => {
-
   const request = axios
     .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
     .then((response) => {
@@ -163,7 +162,7 @@ const getWeeks = (data) => {
     return [...Object.keys(data[0].weeklyPoints)]
   }
   else {
-    console.log("progressData.js::calcWeeks(): data does not contain non-empty field: weeklyPoints!");
+    console.error("progressData.js::calcWeeks(): data does not contain non-empty field: weeklyPoints!");
     return []
   }
 }
@@ -188,7 +187,7 @@ const calcCumulativeScoresForStudents = (data) => {
       })
     });
   
-  } else { console.log("progressData.js::calcCumulativePoints(): data does not contain non-empty field: weeklyPoints or weeklyExercises!");}
+  } else { console.error("progressData.js::calcCumulativePoints(): data does not contain non-empty field: weeklyPoints or weeklyExercises!");}
 
   return data
 }
@@ -202,7 +201,6 @@ const calcCumulatives = (pointArray) => {
 }
 
 const calcCommonData = (data) => {
-
   const weeks = getWeeks(data)
   const avgs = new Array(weeks.length).fill(0)
   const exerciseAvgs = new Array(weeks.length).fill(0)
@@ -254,7 +252,6 @@ const calcCommonData = (data) => {
 }
 
 const dataByWeeks = (data) => {
-
   return getWeeks(data).map(week => {
     const newData = data.map(student => {
       const weekIndex = week-1
@@ -309,7 +306,7 @@ const getCommitData = () => {
         "09": ["cards", "traffic", "task_list"],
         "10": ["valgrind", "calculator", "reverse"],
         "11": ["family", "(K) Sukuprojektin palaute (Tehtävä Palaute3)"], 
-        "12": ["zoo", "colorpicker_designer", "find_dialog", "timer", "bmi"], 
+        "12": ["zoo", "colorpicker_designer", "find_diaerror", "timer", "bmi"], 
         "13": ["moving_circle2/hanoi", "tetris", "(K) Hanoin torni -projektin palaute (Tehtävä Palaute4)"], 
         "01-14": ["command_line"],
         "15": [],
@@ -361,7 +358,7 @@ const getCommitData = () => {
                   newProjects[projectIndex] = studentProject
                 }
                 else {
-                  //console.log("Excluding a project from commit data; it was not recognized as submittable exercise:", studentProject);
+                  //console.error("Excluding a project from commit data; it was not recognized as submittable exercise:", studentProject);
                 }
               })
               newModule.projects = newProjects

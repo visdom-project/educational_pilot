@@ -1,5 +1,5 @@
-import React, { useState } from 'react'
-import CourseList from './CourseList'
+import React, { useState } from "react"
+import CourseList from "./CourseList"
 
 const CoursesTab = () => {
   const [courseList, setCourselist] = useState([])
@@ -7,7 +7,7 @@ const CoursesTab = () => {
   return (
     <>
       <div>Courses tab!</div>
-      <CourseList courselist={courseList} setCourselist={setCourselist} title='List of courses'></CourseList>
+      <CourseList courselist={courseList} setCourselist={setCourselist} title="List of courses" />
     </>
   )
 }

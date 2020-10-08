@@ -1,7 +1,7 @@
-import React from 'react'
-import '../stylesheets/dropdown.css'
+import React from "react"
+import "../stylesheets/dropdown.css"
 
-const DropdownMenu = ({handleClick, options, selectedOption, title}) => {
+const DropdownMenu = ({ handleClick, options, selectedOption, title }) => {
   return (
     <div className="dropdown-menu">
       <label style={{paddingRight: "10px"}} >{title}</label>
@@ -13,7 +13,7 @@ const DropdownMenu = ({handleClick, options, selectedOption, title}) => {
         </div>
       </div>
     </div> 
-  )
+  );
 }
 
 export default DropdownMenu

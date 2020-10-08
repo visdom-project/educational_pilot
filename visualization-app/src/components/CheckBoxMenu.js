@@ -1,6 +1,6 @@
-import React from 'react'
+import React from "react"
 
-const CheckBoxMenu = ({options, handleClick, showAvg, showExpected}) => {
+const CheckBoxMenu = ({ options, handleClick, showAvg, showExpected }) => {
   const labelStyle = {paddingRight: "10px"}
   return (
     <div className="fit-row"
@@ -26,6 +26,7 @@ const CheckBoxMenu = ({options, handleClick, showAvg, showExpected}) => {
         })}
       </div>
     </div>
-  )
+  );
 }
+
 export default CheckBoxMenu

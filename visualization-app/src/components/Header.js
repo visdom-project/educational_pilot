@@ -1,6 +1,6 @@
-import React from 'react'
+import React from "react"
 
-const Tab = ({tabInfo, handleClick}) => {
+const Tab = ({ tabInfo, handleClick }) => {
   return (
     <button className="Header-button"
             onClick={() => handleClick(tabInfo.name)}>
@@ -9,7 +9,7 @@ const Tab = ({tabInfo, handleClick}) => {
   )
 }
 
-const Header = ({tabs, handleClick}) => {
+const Header = ({ tabs, handleClick }) => {
   return (
     <header className="App-header">
       <p>Visu-App</p>

@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import dataService from '../services/studentData'
+import React, { useEffect, useState } from "react"
+import dataService from "../services/studentData"
 
 const parseName = (name) => {
   const index = name.indexOf("|fi:")
@@ -7,7 +7,6 @@ const parseName = (name) => {
 }
 
 const ProjectDisplay = (project) => {
-
   project = project["project"]
 
   const exerciseNumber = project.name.split("|")[0]
@@ -42,11 +41,10 @@ const ProjectDisplay = (project) => {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 const ModuleDisplay = (data) => {
-
   data = data["data"]
 
   const repoFolder = data.commit_module_name
@@ -96,7 +94,7 @@ const ModuleDisplay = (data) => {
         </div>
       </div>
     </div>
-  )
+  );
 }
 
 const PointsDisplay = (data) => {
@@ -106,7 +104,7 @@ const PointsDisplay = (data) => {
         <ModuleDisplay key={module.commit_module_name} data={module}></ModuleDisplay>
       )}
     </div>
-  )
+  );
 }
 
 const EmptyView = ({title}) => 
@@ -161,7 +159,6 @@ const parseStudentData = (studentData) => {
 }
 
 const StudentDetailView = ({selectedStudentID}) => {
-  
   const [ students, setStudents ] = useState([])
 
   useEffect(
@@ -186,10 +183,10 @@ const StudentDetailView = ({selectedStudentID}) => {
         <h3><strong>Student: {studentData.email}</strong></h3>
         <PointsDisplay data={studentData.points}></PointsDisplay>
       </div>
-    ) 
+    );
   }
 
-  return (<EmptyView />)
+  return (<EmptyView />);
 }
 
 export default StudentDetailView

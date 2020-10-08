@@ -1,4 +1,4 @@
-import axios from 'axios'
+import axios from "axios"
 
 const getStudentData = () => {
 
@@ -20,7 +20,7 @@ const getStudentData = () => {
         "09": ["cards", "traffic", "task_list"],
         "10": ["valgrind", "calculator", "reverse"],
         "11": ["family", "(K) Sukuprojektin palaute (Tehtävä Palaute3)"], 
-        "12": ["zoo", "colorpicker_designer", "find_dialog", "timer", "bmi"], 
+        "12": ["zoo", "colorpicker_designer", "find_diaerror", "timer", "bmi"], 
         "13": ["moving_circle2/hanoi", "tetris", "(K) Hanoin torni -projektin palaute (Tehtävä Palaute4)"], 
         "01-14": ["command_line"],
         "15": [],
@@ -74,7 +74,7 @@ const getStudentData = () => {
                   newProjects[projectIndex] = studentProject
                 }
                 else {
-                  //console.log("Excluding a project from commit data; it was not recognized as submittable exercise:", studentProject);
+                  //console.error("Excluding a project from commit data; it was not recognized as submittable exercise:", studentProject);
                 }
               })
               newModule.projects = newProjects

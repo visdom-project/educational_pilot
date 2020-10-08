@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react'
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush } from 'recharts';
-import DropdownMenu from './DropdownMenu'
-import CheckBoxMenu from './CheckBoxMenu'
-import StudentSelector from './StudentSelector'
-import dataService from '../services/progressData'
-import GroupDisplay from './GroupDisplay.js';
+import React, { useState, useEffect } from "react"
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Brush } from "recharts";
+import DropdownMenu from "./DropdownMenu"
+import CheckBoxMenu from "./CheckBoxMenu"
+import StudentSelector from "./StudentSelector"
+import dataService from "../services/progressData"
+import GroupDisplay from "./GroupDisplay.js";
 
 const Controls = (props) => {
   const {handleClick, modes, selectedMode, showableLines,
@@ -19,13 +19,13 @@ const Controls = (props) => {
       <DropdownMenu handleClick={handleClick}
                     options={modes}
                     selectedOption={selectedMode}
-                    title={'Visualization mode:'}/>
-      <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
+                    title={"Visualization mode:"}/>
+      <button id={"showGradesButton"} onClick={() => console.error("TODO: Show grades")}>Show grades</button>
     </div>
-  )
+  );
 }
 
-const ExpectedLabel = ({index, x, y, strokeColor, grade, display}) => {
+const ExpectedLabel = ({ index, x, y, strokeColor, grade, display }) => {
   if (display && index % 2 === 1) {
     return (
       <text x={x+4} y={y} dy={4} fill={strokeColor} fontSize={12} textAnchor="start">{grade}</text>
@@ -58,18 +58,18 @@ const ProgressTab = () => {
   const [ displayedData, setDisplayedData ] = useState([])
   const [ displayedCumulativeData, setDisplayedCumulativeData ] = useState([{name: "init"}])
 
-  const axisNames = ['Week', 'Points']
-  const syncKey = 'syncKey'
-  const avgDataKey = 'weeklyAvgs'
-  const dataKey = 'name'
+  const axisNames = ["Week", "Points"]
+  const syncKey = "syncKey"
+  const avgDataKey = "weeklyAvgs"
+  const dataKey = "name"
   const chartWidth = document.documentElement.clientWidth * 0.9
   const chartHeight = document.documentElement.clientHeight * 0.5
   const selectorHeight = 40
   const avgStrokeWidth = 3
   const studentStrokeWidth = 2
-  const studentStrokeColor = '#8884d861'
-  const expectedStrokeColor = '#46ddae82'
-  const avgStrokeColor = '#b1b1b1'
+  const studentStrokeColor = "#8884d861"
+  const expectedStrokeColor = "#46ddae82"
+  const avgStrokeColor = "#b1b1b1"
 
   const grades = ["0", "1", "2", "3", "4", "5"]
 
@@ -107,7 +107,7 @@ const ProgressTab = () => {
     const targetNode = document.querySelector(`#li-${id}`)
 
     if (targetNode === null) {
-      console.log(`Node with id: ${id} was null!`);
+      console.error(`Node with id: ${id} was null!`);
       return
     }
 
@@ -149,12 +149,11 @@ const ProgressTab = () => {
       setDisplayedCumulativeData(cumulativeSubmissions)
     }
     else {
-      console.log("Selected unimplemented mode:", newMode);
+      console.error("Selected unimplemented mode:", newMode);
     }
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
-    
     const lines = document.querySelectorAll("g.recharts-layer.recharts-line>path.recharts-curve.recharts-line-curve")
     
     // Toggle the visibility of drawn reference lines:
@@ -202,7 +201,7 @@ const ProgressTab = () => {
       
       // Toggle the "visibility" of the selected students in the student listing:
       targetStudents
-        .filter(student => !['week', 'weeklyAvgs'].includes(student) && !student.startsWith("avg_"))
+        .filter(student => !["week", "weeklyAvgs"].includes(student) && !student.startsWith("avg_"))
         .forEach(studentId => document.querySelector(`#li-${studentId}`).style.color = color)
 
       // Toggle the visibility of students by selecting correct group of students to be displayed:
@@ -221,13 +220,13 @@ const ProgressTab = () => {
 
         if (allChecked) {
           // Activate "all students selected" switch:
-          const allSwitch = document.getElementById('input-all')
+          const allSwitch = document.getElementById("input-all")
           if (!allSwitch.checked) { allSwitch.checked = true }
         }
       }
       else {  // Hiding student groups
         // Make sure "all students selected" button is inactive:
-        const allSwitch = document.getElementById('input-all')
+        const allSwitch = document.getElementById("input-all")
         if (allSwitch.checked) { allSwitch.checked = false }
       }
     }
@@ -255,8 +254,8 @@ const ProgressTab = () => {
                  data={displayedData} syncId={syncKey}
                  margin={{ top: 10, right: 15, left: 25, bottom: 25 }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
-        <YAxis label={{ value: `${selectedMode}`, angle: -90, position: 'left', offset: -10 }}/>
+        <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: "bottom" }} />
+        <YAxis label={{ value: `${selectedMode}`, angle: -90, position: "left", offset: -10 }}/>
         
         {// Draw average point lines for each grade from history data:
         grades.map(index =>
@@ -296,8 +295,8 @@ const ProgressTab = () => {
                  data={displayedCumulativeData} syncId={syncKey}
                  margin={{ top: 10, right: 15, left: 25, bottom: selectorHeight }}>
         <CartesianGrid strokeDasharray="3 3" />
-        <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: 'bottom' }} />
-        <YAxis label={{ value: `cumulative ${selectedMode}`, angle: -90, position: 'left', offset: -10 }}/>
+        <XAxis dataKey={dataKey} label={{ value: axisNames[0], position: "bottom" }} />
+        <YAxis label={{ value: `cumulative ${selectedMode}`, angle: -90, position: "left", offset: -10 }}/>
 
         {// Draw average point lines for each grade from history data:
         grades.map(index =>
@@ -332,7 +331,7 @@ const ProgressTab = () => {
         <Brush y={chartHeight-5} tickFormatter={(tick) => tick + 1}></Brush>
       </LineChart>
     </>
-  )
+  );
 }
 
 export default ProgressTab

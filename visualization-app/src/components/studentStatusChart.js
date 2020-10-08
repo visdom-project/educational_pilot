@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react'
-import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from 'recharts';
-import axios from 'axios'
-import DropdownMenu from './DropdownMenu'
+import React, { useState, useEffect } from "react"
+import { ComposedChart, XAxis, YAxis, CartesianGrid, Area, Bar, Cell, ReferenceLine } from "recharts";
+import axios from "axios"
+import DropdownMenu from "./DropdownMenu"
 
 const Controls = (props) => {
   const { handleModeSwitch, modes, selectedMode,
@@ -12,14 +12,14 @@ const Controls = (props) => {
       <DropdownMenu handleClick={handleModeSwitch}
                     options={modes}
                     selectedOption={selectedMode}
-                    title={'Visualization mode:'}/>
+                    title={"Visualization mode:"}/>
       <DropdownMenu handleClick={handleWeekSwitch}
                     options={weeks}
                     selectedOption={selectedWeek}
-                    title={'Visualize week:'}/>
-      <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
+                    title={"Visualize week:"}/>
+      <button id={"showGradesButton"} onClick={() => console.error("TODO: Show grades")}>Show grades</button>
     </div>
-  )
+  );
 }
 
 const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode, selectedStudentID }) => {
@@ -32,8 +32,8 @@ const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode, selectedStu
   useEffect(
     () => {
       axios
-      .get( 'http://localhost:9200/gitlab-course-40-commit-data/_search',
-            {Accept: 'application/json', 'Content-Type': 'application/json'} )
+      .get( "http://localhost:9200/gitlab-course-40-commit-data/_search",
+            {Accept: "application/json", "Content-Type": "application/json"} )
       .then((response) => {
 
         const results = []
@@ -80,7 +80,7 @@ const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode, selectedStu
 
       </ComposedChart>
     </div>
-  )
+  );
 }
 
 export default StudentStatusChart

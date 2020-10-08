@@ -1,6 +1,6 @@
-import React from 'react'
+import React from "react"
 
-const StudentSelector = ({students, handleClick}) => {
+const StudentSelector = ({ students, handleClick }) => {
   return (
     <div style={{marginLeft: "3em", marginTop: "0em", fontSize: "13px"}}>
       <ul style={{columns: Math.round(students.length / 20) +1,
@@ -16,7 +16,7 @@ const StudentSelector = ({students, handleClick}) => {
           </li>)}
       </ul>
     </div>
-  )
+  );
 }
 
 export default StudentSelector

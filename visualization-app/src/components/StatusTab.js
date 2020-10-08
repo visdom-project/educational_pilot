@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react'
-import dataService from '../services/statusData'
-import MultiChart from './StatusChart'
-import DropdownMenu from './DropdownMenu'
-import CheckBoxMenu from './CheckBoxMenu'
-import StudentDetailView from './StudentDetailView'
+import React, { useState, useEffect } from "react"
+import dataService from "../services/statusData"
+import MultiChart from "./StatusChart"
+import DropdownMenu from "./DropdownMenu"
+import CheckBoxMenu from "./CheckBoxMenu"
+import StudentDetailView from "./StudentDetailView"
 
 const Controls = (props) => {
   const {handleModeClick, modes, selectedMode, showableLines,
@@ -16,14 +16,14 @@ const Controls = (props) => {
         <DropdownMenu handleClick={handleModeClick}
                       options={modes}
                       selectedOption={selectedMode}
-                      title={'Visualization mode:'}/>
+                      title={"Visualization mode:"}/>
         <DropdownMenu handleClick={handleWeekClick}
                       options={weeks}
                       selectedOption={selectedWeek}
-                      title={'Visualize week:'}/>
-        <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
+                      title={"Visualize week:"}/>
+        <button id={"showGradesButton"} onClick={() => console.error("TODO: Show grades")}>Show grades</button>
       </div>
-    )
+    );
   }
     
   return (
@@ -35,14 +35,14 @@ const Controls = (props) => {
       <DropdownMenu handleClick={handleModeClick}
                     options={modes}
                     selectedOption={selectedMode}
-                    title={'Visualization mode:'}/>
+                    title={"Visualization mode:"}/>
       <DropdownMenu handleClick={handleWeekClick}
                     options={weeks}
                     selectedOption={selectedWeek}
-                    title={'Visualize week:'}/>
-      <button id={"showGradesButton"} onClick={() => console.log("TODO: Show grades")}>Show grades</button>
+                    title={"Visualize week:"}/>
+      <button id={"showGradesButton"} onClick={() => console.error("TODO: Show grades")}>Show grades</button>
     </div>
-  )
+  );
 }
 
 const StatusTab = () => {
@@ -73,9 +73,9 @@ const StatusTab = () => {
       totalPoints: "totPts",
       missed: "missed",
 
-      cumulativeAvgs: 'cumulativeAvgs',
-      cumulativeMidExpected: 'cumulativeMidExpected',
-      cumulativeMinExpected: 'cumulativeMinExpected'
+      cumulativeAvgs: "cumulativeAvgs",
+      cumulativeMidExpected: "cumulativeMidExpected",
+      cumulativeMinExpected: "cumulativeMinExpected"
     },
     "exercises": {
       max: "maxExer",
@@ -83,21 +83,21 @@ const StatusTab = () => {
       totalPoints: "totExer",
       missed: "missedExer",
       
-      cumulativeAvgs: 'cumulativeAvgsExercises',
-      cumulativeMidExpected: 'cumulativeMidExpectedExercises',
-      cumulativeMinExpected: 'cumulativeMinExpectedExercises'
+      cumulativeAvgs: "cumulativeAvgsExercises",
+      cumulativeMidExpected: "cumulativeMidExpectedExercises",
+      cumulativeMinExpected: "cumulativeMinExpectedExercises"
     },
     "submissions": {},
     "commits": {}
   }
   const [ dataKeys, setDataKeys ] = useState(allKeys[selectedMode])
-  const commonKeys = { average: 'avg', expectedMinimum: 'min', expectedMedium: 'mid' }
+  const commonKeys = { average: "avg", expectedMinimum: "min", expectedMedium: "mid" }
 
   const axisNames = {
-    "points": ['Students', 'Points'],
-    "exercises": ['Students', 'Exercises'],
-    "commits": ['Students', 'Commits'],
-    "submissions": ['Students', 'Exercises']
+    "points": ["Students", "Points"],
+    "exercises": ["Students", "Exercises"],
+    "commits": ["Students", "Commits"],
+    "submissions": ["Students", "Exercises"]
   }
 
   const showableLines = ["Average", "Expected"]
@@ -134,9 +134,12 @@ const StatusTab = () => {
           setCommitData(commits)
 
           // Select count data from correct week:
-          const selected = (commits !== undefined && commits.length > 0) ?
+          const selected = (commits !== undefined && commits.length > 0 && commits[0].length > 0) ?
             commits[commits.findIndex(module => parseInt(module.week) === parseInt(selectedWeek))]["data"]
             : []
+          if (selected.length < 1) {
+            console.error("Status view: No commit data to display. Is the database available?");
+          }
           setSelectedCountData(selected)
 
          updateTreshold(treshold, undefined, commits)
@@ -162,7 +165,6 @@ const StatusTab = () => {
   }
 
   const handleWeekSwitch = (newWeek, data, commons, keys, submissions, mode) => {
-    
     if (newWeek === undefined) { newWeek = selectedWeek }
     if (data === undefined) { data = progressData }
     if (commons === undefined) { commons = commonData }
@@ -179,9 +181,9 @@ const StatusTab = () => {
       setSelectedWeekData(data[newWeek-1]["data"])
 
       setcommonDataToDisplay({
-        'avg': commons[keys.cumulativeAvgs][newWeek-1],
-        'mid': commons[keys.cumulativeMidExpected][newWeek-1],
-        'min': commons[keys.cumulativeMinExpected][newWeek-1]
+        "avg": commons[keys.cumulativeAvgs][newWeek-1],
+        "mid": commons[keys.cumulativeMidExpected][newWeek-1],
+        "min": commons[keys.cumulativeMinExpected][newWeek-1]
       })
     }
 
@@ -208,7 +210,6 @@ const StatusTab = () => {
   }
 
   const handleToggleRefLineVisibilityClick = (targetLine) => {
-    
     // Find reference lines:
     const lines = document.querySelectorAll("g.recharts-layer.recharts-reference-line")
     
@@ -229,7 +230,6 @@ const StatusTab = () => {
   }
 
   const updateTreshold = (newTreshold, selectedData, selectedCountD) => {
-
     if (selectedData === undefined) { selectedData = selectedWeekData }
     if (selectedCountD === undefined) { selectedCountD = selectedCountData }
 
@@ -250,7 +250,7 @@ const StatusTab = () => {
   return (
     <>
       <div className="fit-row">
-        <h2>{'Current Student Statuses'}</h2>
+        <h2>{"Current Student Statuses"}</h2>
         <Controls handleModeClick={handleModeSwitchClick}
                   modes={displayedModes} selectedMode={selectedMode}
                   showableLines={showableLines}
@@ -272,7 +272,7 @@ const StatusTab = () => {
 
       <StudentDetailView selectedStudentID={selectedStudent}></StudentDetailView>
     </>
-  )
+  );
 }
   
 export default StatusTab

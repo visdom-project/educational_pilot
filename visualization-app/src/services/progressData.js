@@ -1,10 +1,9 @@
-import axios from 'axios'
-import historyDataService from '../services/historyData'
+import axios from "axios"
+import historyDataService from "../services/historyData"
 
 const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search'
 
 const getModuleMapping = (modules) => {
-
   const corrects = []
   modules.forEach(module => {
     if (module.exercises.length > 0 || module.id === 570) { // Hard coding: ID 570 is a special case: git-course-module that has no points in Programming 2.
@@ -26,7 +25,6 @@ const getModuleMapping = (modules) => {
 }
 
 const getPointsForWeek = (data, moduleId) => {
-
   const correct_week = data.points.modules.find( module => module.id === moduleId )
 
   if (correct_week !== undefined) {
@@ -36,12 +34,11 @@ const getPointsForWeek = (data, moduleId) => {
     }, 0)
     return [correct_week.points, exercises]
   }
-  console.log("progressData.js::getPointsForWeek(): Could not find points for a student!");
+  console.error("progressData.js::getPointsForWeek(): Could not find points for a student!");
   return 0
 }
 
 const calcWeeklyAvgs = (weeklyPointData) => {
-
   weeklyPointData.forEach(week => {
     let len = 0
     const pointSum = Object.keys(week).reduce((sum, student) => {
@@ -94,7 +91,6 @@ const addCumulativePointData = (data, correctModules) => {
 }
 
 const getData = () => {
-
   const request = axios
     .get(baseUrl, {Accept: 'application/json', 'Content-Type': 'application/json' })
     .then((response) => {
@@ -208,9 +204,8 @@ const getData = () => {
 }
 
 const getStudentIds = (data) => {
-  
   if (data === undefined || data[0] === undefined) {
-    console.log("progressData.js::getStudentIds(): data is undefined. Returning empty student list.");
+    console.error("progressData.js::getStudentIds(): data is undefined. Returning empty student list.");
     return []
   }
   const list = Object.keys(data[0]).map(key => key)
@@ -229,7 +224,6 @@ const getStudentIds = (data) => {
 }
 
 const getCommitData = (response, moduleMapping) => {
-
   const weeklyPoints = moduleMapping.map((id, index) => { return { week: index + 1 } })
   const cumulativeResults = moduleMapping.map((id, index) => { return { week: index + 1 } })
 
