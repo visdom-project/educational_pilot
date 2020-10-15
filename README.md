@@ -8,19 +8,8 @@
 ```
 
    Edit ElasticSearch configuration file in the container to enable cors and allow access for front service running in localhost:3000
-   *(TODO: move these inside the image to avoid manual set-up):*
 ```
-   docker exec -it <CONTAINER_ID> bash
-   cd config
-   vi elasticsearch.yml
-```
-
-   Insert the following 2 rows:
-```
-   http.cors.enabled: true
-   http.cors.allow-origin: http://localhost:3000
-```
-   And exit the container. Rerun the container for the configuration to take effect:
+   docker cp elasticsearch.yml elasticsearch:/usr/share/elasticsearch/config/elasticsearch.yml
 ```
    docker stop <CONTAINER_ID>
    docker start  <CONTAINER_ID>
