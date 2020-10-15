@@ -7,10 +7,10 @@
    docker run -d -p 9200:9200 -p 9300:9300 -h elasticsearch --name elasticsearch -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.7.1
 ```
 
-   Edit ElasticSearch configuration file in the container to enable cors and allow access for front service running in localhost:3000
+   Copy ElasticSearch configuration file in the container to enable cors and allow access for front service running in localhost:3000
 ```
    docker cp elasticsearch.yml elasticsearch:/usr/share/elasticsearch/config/elasticsearch.yml
-```
+   
    docker stop <CONTAINER_ID>
    docker start  <CONTAINER_ID>
 ```
