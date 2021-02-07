@@ -18,6 +18,17 @@ const VisuTab = ({ tab }) => {
   );
 }
 
+/**
+ * App component manages which view aka. "tab" the user sees. 
+ * Views are components, too, but only one of the is displayed 
+ * at a time.
+ *
+ * Switching betweeen views happens by the user clicking on
+ * a button in the navigation panel shown in the upper edge of 
+ * the page.
+ *
+ * Once a view is selected, the application tries to render it.
+ */
 function App() {
   const [ currentTab, setCurrentTab ] = useState(0)
 
