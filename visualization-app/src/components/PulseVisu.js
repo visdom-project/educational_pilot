@@ -170,14 +170,12 @@ export const PulseVisu = () => {
         >
           <CartesianGrid horizontal={false} />
           <XAxis 
-            dataKey="dateInSecond"  
-            domain={courseTime} type="number" 
+            dataKey="dateInSecond"
             tickFormatter={(tickItem)=>moment(tickItem*(1000*60*60*24)).format('ddd MMM Do')} 
             angle={-90}
             textAnchor="end"
             scale="time"
             tickCount={7}
-            padding={{ left: 20, right: 20 }}
             interval={0}
             // tickLine={false}
             // tick={datePosition}
@@ -220,11 +218,11 @@ export const PulseVisu = () => {
             />
           )} */}
           {/* <Legend iconSize={0.1} iconType='wye' /> */}
-          <Brush 
-            tickFormatter={tick => tick + 1} 
+          <Brush
+            tickFormatter={(tickItem)=>moment(tickItem*(1000*60*60*24)).format('ddd MMM Do')}
             y={document.documentElement.clientHeight * 0.5 + 120}
             height={25} 
-            stroke="#8884d8"/>  
+            stroke="#8884d8"/>
         </BarChart>
       {/* </ResponsiveContainer> */}
     </div>
