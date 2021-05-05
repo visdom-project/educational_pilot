@@ -23,26 +23,10 @@ const getAllStudentData = () => {
 const getData = (studentId) => {
 
   const CheckCommitDate = (deadline, date) => {
-    // if (deadline.getYear() !== date.getYear()){
-    //   return deadline.getYear() > date.getYear() ? "EARLY" : "LATE";
-    // }
-    // else if (deadline.getMonth() !== date.getMonth()) {
-    //   return deadline.getMonth() > date.getMonth() ? "EARLY" : "LATE";
-    // }
-    // else {
-    //   if (deadline.getDate() - date.getDate() === 1) {
-    //     return "IN-TIME";
-    //   }
-    //   else {
-    //     return deadline.getDate() - date.getDate() > 1 ? "EARLY" : "LATE";
-    //   }
-    // }
-    console.log("a", deadline, "b" , date)
     if (deadline - date === 1) return "IN-TIME"
     if (deadline - date > 1) return "EARLY"
     if (deadline - date < 1) return "LATE"
   }
-  // / (1000*60*60*24)
   const getNumberOfDay = (date) => Math.round(date.getTime() / (1000*60*60*24));
 
   const request = axios
