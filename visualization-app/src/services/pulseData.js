@@ -57,13 +57,10 @@ const getData = (studentId) => {
               } 
               if (!Object.keys(WEEKLY_DEADLINE).includes(module.module_name)) {
                 let newDeadl = new Date(WEEKLY_DEADLINE["start-date"]);
-                // console.log(newDeadl)
                 while (Object.keys(WEEKLY_DEADLINE).find(item => getNumberOfDay(WEEKLY_DEADLINE[item]) === getNumberOfDay(newDeadl))) {
                   newDeadl.setDate(newDeadl.getDate() + 7);
                   newDeadl.setHours(0,0,0,0)
                 }
-                // newDeadl.setDate(newDeadl.getDate() + 7);
-                // newDeadl.setHours(0,0,0,0)
                 WEEKLY_DEADLINE[module.module_name] = newDeadl;
               }
               let initialDate = new Date(WEEKLY_DEADLINE["start-date"]);
@@ -77,31 +74,11 @@ const getData = (studentId) => {
                   };
                   commitData.push(newObj)
                   initialDate.setDate(initialDate.getDate() + 1)
-                  // console.log(getNumberOfDay(initialDate))
                 }
               }
               const moduleDeadline = WEEKLY_DEADLINE[module.module_name];
-              // console.log(WEEKLY_DEADLINE)
-              // console.log("a" ,moduleDeadline, "b", commitDate)
               const datecheck = CheckCommitDate(getNumberOfDay(moduleDeadline), getNumberOfDay(commitDate));
               let singleDate = commitData.find(item => item.dateInSecond === getNumberOfDay(commitDate));
-              // if (!singleDate) {
-              //   let newObj = {
-              //     date: commitDate,
-              //     dateInSecond: getNumberOfDay(commitDate),
-              //     earlyCommit: 0,
-              //     inTimeCommit: 0,
-              //     lateCommit: 0
-              //   };
-              //   if (datecheck === "EARLY") {
-              //     newObj = {...newObj, earlyCommit: 1};
-              //   } else if (datecheck === "IN-TIME") {
-              //     newObj = {...newObj, inTimeCommit: 1};
-              //   } else if (datecheck === "LATE"){
-              //     newObj = {...newObj, lateCommit: 1};
-              //   }
-              //   commitData.push(newObj)
-              // } else {
                 if (singleDate) {
                   if (datecheck === "EARLY") {
                     singleDate.earlyCommit += 1;
@@ -115,7 +92,6 @@ const getData = (studentId) => {
           })
         })
       }
-      // console.log(commitData)
       return [commitData,[getNumberOfDay(WEEKLY_DEADLINE["start-date"]), getNumberOfDay(WEEKLY_DEADLINE["end-date"])]];
     })
     .catch(someError => console.log(someError))
@@ -123,4 +99,5 @@ const getData = (studentId) => {
     return request;
   }
 
-export default {getData, getAllStudentData};
+/* eslint import/no-anonymous-default-export: [2, {"allowObject": true}] */
+export default { getData, getAllStudentData }
