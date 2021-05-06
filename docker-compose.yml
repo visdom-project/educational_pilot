@@ -1,0 +1,29 @@
+version: "3"
+
+services:
+    elasticsearch:
+        image: docker.elastic.co/elasticsearch/elasticsearch:7.7.1
+        environment:
+            - discovery.type=single-node
+            - cluster.name=docker-cluster
+            - bootstrap.memory_lock=true
+        build:
+            dockerfile: Dockerfile
+            context: .
+        ports:
+            - "9200:9200"
+        expose: 
+            - "9200"
+        tty: true
+        networks: 
+            - app
+    frontend:
+        build:
+            dockerfile: Dockerfile
+            context: ./visualization-app
+        ports: 
+            - "3000:3000"
+        networks: 
+            - app
+networks: 
+    app:

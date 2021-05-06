@@ -1,7 +1,8 @@
 import axios from "axios"
 import historyDataService from "../services/historyData"
+import { SERVER_URL } from "./constants.js";
 
-const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search'
+const baseUrl = `${SERVER_URL}/gitlab-course-40-commit-data-anonymized/_search`
 
 const getModuleMapping = (modules) => {
   const corrects = []

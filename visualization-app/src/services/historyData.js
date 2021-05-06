@@ -1,6 +1,6 @@
-import axios from "axios"
-
-const baseUrl = "http://localhost:9200/gitlab-course-30-aggregate-data/_search"
+import axios from "axios";
+import { SERVER_URL }from "./constants.js";
+const baseUrl = `${SERVER_URL}/gitlab-course-30-aggregate-data/_search`
 
 const getHistoryData = () => {
   const request = axios
