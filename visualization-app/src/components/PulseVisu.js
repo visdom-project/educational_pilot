@@ -23,6 +23,13 @@ export const StudentList = ({setStudentID, studentID}) => {
         .then(res => setStudentData(res))
         .catch(err => console.log(err))
     }, [])
+
+  if (!studentData || !student) return (
+    <DropdownMenu handleClick={setStudentID}
+                    options={studentData.map(student => student.student_id)}
+                    selectedOption={studentID}
+                    title={"Chosen student:"} />
+  );
   return(
     <div className="fit-row">
       <DropdownMenu handleClick={setStudentID}
@@ -52,7 +59,7 @@ export const StudentList = ({setStudentID, studentID}) => {
 }
 
 export const PulseVisu = () => {
-  const [studentID, setStudentID] = useState("0b8d8568b1e23b1eb116");
+  const [studentID, setStudentID] = useState("");
   const [data, setData] = useState([]);
 
   useEffect(
@@ -62,6 +69,8 @@ export const PulseVisu = () => {
         .then(response => setData(response[0]))
         .catch(err => console.log(err))
     }, [studentID])
+
+  if (!data) return <StudentList setStudentID={setStudentID} studentID={studentID}/>;
 
   return (
     <div>
