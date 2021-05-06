@@ -1,6 +1,15 @@
 # Prerequisites
 - [Docker Desktop](https://www.docker.com/get-started)
 
+# The very fast way to get started:
+
+*If you have backup folder, use this approach.*
+
+1. run `npm run build` in folder visualization-app/
+2. run `docker-compose up` in root folder of the repository
+
+*Now you have both backend with example data and frontend running. For frontend development, stop and remove the frontend container and use npm start in visualization-app/.*
+
 # Fast guide to getting started
 
 1. Deploy a data management system (DMS)
