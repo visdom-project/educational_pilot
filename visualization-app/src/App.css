@@ -2,6 +2,10 @@
   text-align: left;
 }
 
+div {
+  box-sizing: border-box;
+}
+
 .App-header {
   background-color: #282c34;
   display: flex;
@@ -119,8 +123,8 @@ h3 {
 }
 
 svg {
-  width: 97.6%;
-  height: 98%;
+  width: 100%;
+  height: 100%;
 }
 
 .view {

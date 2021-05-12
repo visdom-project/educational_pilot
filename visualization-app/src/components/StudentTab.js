@@ -1,9 +1,10 @@
-import React, { useState, useEffect } from "react"
+import React from "react"
+import { PulseVisu } from "./PulseVisu"
 
 const StudentTab = () => {
   return (
     <>
-      <h2>{"Not implemented yet."}</h2>
+      <PulseVisu /> 
     </>
   );
 }
