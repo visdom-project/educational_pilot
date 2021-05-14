@@ -37,6 +37,7 @@ const getData = (studentId) => {
       const commitData = [];
       const WEEKLY_DEADLINE = {};
       const NUMBER_OF_WEEK = 14;
+      console.log(studentId);
 
       if (studentData) {
         studentData.commits.forEach(module => {
