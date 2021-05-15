@@ -1,66 +1,27 @@
 # Prerequisites
-- [Docker Desktop](https://www.docker.com/get-started)
+- [Docker Engine](https://docs.docker.com/get-docker/)
+- [Docker Compose](https://docs.docker.com/compose/install/)
 
-# The very fast way to get started:
+# Getting started (preferred way):
 
-*If you have backup folder, use this approach.*
+*If you have a backup data dump folder containing example data, use this approach. If necessary, request for a data dump from the authors.*
 
 1. run `npm run build` in folder visualization-app/
 2. run `docker-compose up` in root folder of the repository
 
-*Now you have both backend with example data and frontend running. For frontend development, stop and remove the frontend container and use npm start in visualization-app/.*
+Now you should have both backend with example data and frontend running. You may remove the backup_loader container now.
 
-# Fast guide to getting started
+If the backup folder is missing or misplaced, elasticsearch service can't be built and will fail. Withouth backup data, deploy an empty data service according to instructions below, or use a custom data service.
 
-1. Deploy a data management system (DMS)
-2. Deploy the visualization service
+For frontend development, stop and remove the frontend container and use `npm start` in directory `visualization-app/`.
 
-*Detailed instructions below.*
+# Getting started without an example data dump, backend:
 
-Note: Instructions are written for Ubuntu users.
+*Note: if you want to fetch for new data, this option requires fixing/rewriting the data fetcher script, so it is likely an unviable option. This approach is deprecated as of summer 2021, because a new backend solution is developed to replace the elasticsearch + fetcher script based backend solution.*
 
-## Option 1.A: Deploy the data service from a data dump
+*Detailed instructions written from the perspective of Ubuntu users.*
 
-#### Prerequisites for this option
-
-- You have received a data dump from the author and extracted the compressed folder in the root of the educational pilot repository.
-- curl or similar tool that allows sending custom http requests (needed in steps 6 to 7).
-
-#### Step-by-step instructions
-
-1. Run a container:
-
-        docker run -d -p 9200:9200 -p 9300:9300 -h elasticsearch --name elasticsearch -e "discovery.type=single-node" docker.elastic.co/elasticsearch/elasticsearch:7.7.1
-
-2. Copy the [ES](https://www.elastic.co/guide/en/elasticsearch/reference/current/index.html) configuration file into the container:
-
-        docker cp elasticsearch.yml elasticsearch:/usr/share/elasticsearch/config/elasticsearch.yml
-
-3. Copy the backup directory into the container:
-
-        docker cp backup/ elasticsearch:/home/backup
-
-4. Edit owner of the backup file inside the container:
-
-        docker exec -it elasticsearch bash
-
-        chown -R elasticsearch:elasticsearch /home/backup
-
-        (Exit the container with ctrl + d.)
-
-5. For the config to take effect, restart the container:
-
-        docker container restart elasticsearch
-
-6. Register a snapshot repository:
-
-        curl -X PUT "localhost:9200/_snapshot/my_backup?pretty" -H 'Content-Type: application/json' -d '{"type": "fs", "settings": {"location": "/home/backup"}}'
-
-7. Restore the data from the backup:
-
-        curl -X POST "localhost:9200/_snapshot/my_backup/snapshot_1/_restore?pretty"
-
-## Option 1.B: empty ES service + data fetching script
+## Deploying the data management system (DMS): Empty ES service + data fetching script
 
 #### Prerequisites for this option
 
@@ -90,7 +51,7 @@ Note: Instructions are written for Ubuntu users.
        PLUSSA_API_URL = https://plus.tuni.fi/api/v2/
        PLUSSA_API_KEY = 
 
-5. (optional) Update fetcher script in fetch_data.py or write completely new one according to your needs.
+5. Update fetcher script in fetch_data.py or write completely new one according to your needs.
 
 6.  Deploy data fetcher service:
 
@@ -100,7 +61,9 @@ Note: Instructions are written for Ubuntu users.
 
     (You may Use ctrl + p && ctrl + q to detach from docker tty while leaving process alive.)
 
-## Option 2.A: Deploying the visualization service in Docker
+# Deploying the visualization service:
+
+## Option A: Deploying the visualization service in Docker
 
     cd visualization-app
     docker build . -t visuapp
@@ -108,7 +71,7 @@ Note: Instructions are written for Ubuntu users.
 
     (Exiting with ctrl + d will kill the process.)
 
-## Option 2.B: Deploying the visualization service locally
+## Option B: Deploying the visualization service locally
 
 - This option is fit for anyone planning on contributing to visualization code.
 
@@ -116,9 +79,10 @@ Note: Instructions are written for Ubuntu users.
 
 - [Node.js](https://nodejs.org/en/download/package-manager/#debian-and-ubuntu-based-linux-distributions) version 10.18 or newer.
 - Installing a newer Node version will install Node Package Manager (npm) and npx as well. If not, install npm. At least versions 6.14.x are known to work.
-- Alternatively to npm, you may use yarn at your own risk. It will probably work just fine.
 
 #### Step-by-step instructions
+
+    cd visualization-app
 
 1. On the first time, install dependencies:
 
