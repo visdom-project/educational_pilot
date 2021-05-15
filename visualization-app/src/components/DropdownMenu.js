@@ -7,7 +7,7 @@ const DropdownMenu = ({ handleClick, options, selectedOption, title }) => {
       <label style={{paddingRight: "10px"}} >{title}</label>
       <div className="dropdown">
         <button className="dropdown-title-button">{selectedOption}</button>
-        <div className="dropdown-options">
+        <div className="dropdown-options" style={{maxHeight: "200px", overflow: "scroll"}}>
           {options.map(option => 
             <button key={option} onClick={() => handleClick(option)} >{option}</button>)}
         </div>

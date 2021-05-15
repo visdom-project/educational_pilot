@@ -70,7 +70,7 @@ export const PulseVisu = () => {
         .catch(err => console.log(err))
     }, [studentID])
 
-  if (!data) return <StudentList setStudentID={setStudentID} studentID={studentID}/>;
+  if (!studentID || !data) return <StudentList setStudentID={setStudentID} studentID={studentID}/>;
 
   return (
     <div>

@@ -1,17 +1,9 @@
-FROM node:10-alpine
+FROM nginx:alpine
 
-WORKDIR /usr/src/app
+COPY ./build /var/www
 
-COPY package*.json ./
-
-RUN npm install
-
-RUN npm install recharts --save
-
-RUN npm install axios --save
-
-COPY . .
+COPY nginx.conf /etc/nginx/nginx.conf
 
 EXPOSE 3000
 
-CMD [ "npm", "start" ]
+ENTRYPOINT ["nginx","-g","daemon off;"]

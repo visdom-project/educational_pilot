@@ -134,7 +134,7 @@ const StatusTab = () => {
           setCommitData(commits)
 
           // Select count data from correct week:
-          const selected = (commits !== undefined && commits.length > 0 && commits[0].length > 0) ?
+          const selected = (commits !== undefined && commits.length > 0 && commits[0].data.length > 0) ?
             commits[commits.findIndex(module => parseInt(module.week) === parseInt(selectedWeek))]["data"]
             : []
           if (selected.length < 1) {
@@ -197,9 +197,10 @@ const StatusTab = () => {
     }
     else {
       if (commitData !== undefined && commitData.length > 1) {
-        const weekStr = newWeek.toString()
-        const key = (weekStr.length < 2) ? `0${weekStr}` : (weekStr !== "14") ? weekStr : "01-14"
-        newCountData = commitData[commitData.findIndex(module => module.week === key)]["data"]
+        const weekStr = (newWeek-1).toString()
+        // const key = (weekStr.length < 2) ? `0${weekStr}` : (weekStr !== "14") ? weekStr : "01-14";
+        // newCountData = commitData[commitData.findIndex(module => module.week === key)]["data"]
+        newCountData = commitData[weekStr]["data"]
         setSelectedCountData(newCountData)
       }
     }

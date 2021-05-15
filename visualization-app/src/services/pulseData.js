@@ -1,6 +1,7 @@
 import axios from "axios"
+import { SERVER_URL } from "./constants.js";
 
-const baseUrl = 'http://localhost:9200/gitlab-course-40-commit-data-anonymized/_search'
+const baseUrl = `${SERVER_URL}/gitlab-course-40-commit-data-anonymized/_search`;
 
 const getAllStudentData = () => {
   const request = axios
@@ -36,6 +37,7 @@ const getData = (studentId) => {
       const commitData = [];
       const WEEKLY_DEADLINE = {};
       const NUMBER_OF_WEEK = 14;
+      console.log(studentId);
 
       if (studentData) {
         studentData.commits.forEach(module => {
