@@ -48,7 +48,7 @@ const StudentStatusChart = ({ handleModeSwitch, modes, selectedMode, selectedStu
             }
           })
         })
-
+        console.log(results)
         // TODO: Remove hard coding:
         const availableWeeks = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
         setWeeks(availableWeeks)

@@ -1,1 +1,1 @@
-export const SERVER_URL = process.env.ES_URL || "http://localhost:9200";
+export const SERVER_URL = "https://elasticsearch.tlt-cityiot.rd.tuni.fi";
