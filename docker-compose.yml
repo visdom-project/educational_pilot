@@ -1,33 +1,33 @@
 version: "3"
 
 services:
-    # elasticsearch:
-    #     image: edupilot/backend_es:latest
-    #     environment:
-    #         - discovery.type=single-node
-    #         - cluster.name=docker-cluster
-    #         - bootstrap.memory_lock=true
-    #     build:
-    #         dockerfile: Dockerfile
-    #         context: .
-    #     ports:
-    #         - "9200:9200"
-    #     expose:
-    #         - "9200"
-    #     tty: true
-    #     networks:
-    #         - app
-    # # You may remove the backup_loader container 
-    # # once downloading the backup is done:
-    # backup_loader:
-    #     image: edupilot/backup_loader:latest
-    #     depends_on:
-    #         - elasticsearch
-    #     build:
-    #         dockerfile: Dockerfile
-    #         context: ./load_backup
-    #     networks:
-    #         - app
+    elasticsearch:
+        image: edupilot/backend_es:latest
+        environment:
+            - discovery.type=single-node
+            - cluster.name=docker-cluster
+            - bootstrap.memory_lock=true
+        build:
+            dockerfile: Dockerfile
+            context: .
+        ports:
+            - "9200:9200"
+        expose:
+            - "9200"
+        tty: true
+        networks:
+            - app
+    # You may remove the backup_loader container 
+    # once downloading the backup is done:
+    backup_loader:
+        image: edupilot/backup_loader:latest
+        depends_on:
+            - elasticsearch
+        build:
+            dockerfile: Dockerfile
+            context: ./load_backup
+        networks:
+            - app
     frontend:
         image: edupilot/frontend:latest
         build:

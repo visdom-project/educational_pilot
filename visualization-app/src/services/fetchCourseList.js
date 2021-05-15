@@ -6,6 +6,6 @@ const baseUrl = `${SERVER_URL}/plussa-course-list/_search`;
 export const fetchCourseList = async () => {
     const response = await axios.get(baseUrl,
         { Accept: "application/json",
-         "Content-Type": "apllication/json"});
+         "Content-Type": "application/json"});
     return parseCourseListData(response.json().hits);
 }
